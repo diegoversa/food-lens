@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>FoodLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --cream:#FDFAF5; --sage:#3B6D11; --sage-mid:#639922; --sage-light:#EAF3DE; --sage-border:#C0DD97;
+      --amber:#BA7517; --amber-light:#FAEEDA; --amber-border:#FAC775;
+      --coral:#D85A30; --coral-light:#FAECE7; --coral-border:#F0997B;
+      --blue:#185FA5; --blue-light:#E6F1FB; --blue-border:#B5D4F4;
+      --text:#2C2C2A; --muted:#5F5E5A; --border:#D3D1C7; --surface:#FFF; --bg:#F1EFE8;
+      --radius:18px; --radius-sm:12px;
+      --shadow:0 2px 16px rgba(44,44,42,0.08);
+    }
+    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+    #app{max-width:430px;margin:0 auto;background:var(--cream);min-height:100vh;overflow-x:hidden}
+
+    /* ─── SCREENS ─── */
+    .screen{display:none;flex-direction:column;min-height:100vh;animation:fadeUp 0.35s ease both}
+    .screen.active{display:flex}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ─── SPLASH ─── */
+    #splashScreen{background:var(--sage);align-items:center;justify-content:center;gap:0}
+    .splash-logo{display:flex;flex-direction:column;align-items:center;gap:16px}
+    .splash-icon{width:80px;height:80px;background:rgba(255,255,255,0.15);border-radius:28px;
+      display:flex;align-items:center;justify-content:center;animation:popIn 0.5s 0.2s both cubic-bezier(.34,1.56,.64,1)}
+    .splash-icon svg{width:40px;height:40px;stroke:#fff;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+    @keyframes popIn{from{opacity:0;transform:scale(0.6)}to{opacity:1;transform:scale(1)}}
+    .splash-title{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:#fff;
+      animation:fadeUp 0.4s 0.4s both}
+    .splash-sub{font-size:14px;color:rgba(255,255,255,0.7);animation:fadeUp 0.4s 0.55s both}
+
+    /* ─── SETUP ─── */
+    #setupScreen{padding:48px 24px 40px}
+    .setup-back{background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);
+      font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:4px;margin-bottom:24px;padding:0}
+    .setup-back svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .setup-tag{display:inline-flex;align-items:center;gap:5px;background:var(--blue-light);color:var(--blue);
+      font-size:11px;font-weight:500;letter-spacing:0.6px;text-transform:uppercase;padding:5px 10px;border-radius:20px;margin-bottom:12px}
+    .setup-h{font-family:'Playfair Display',serif;font-size:26px;font-weight:600;line-height:1.2;margin-bottom:8px}
+    .setup-p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:28px}
+    .setup-card{background:var(--blue-light);border:1px solid var(--blue-border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+    .setup-label{font-size:13px;font-weight:500;color:var(--blue);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+    .setup-label svg{width:14px;height:14px;stroke:var(--blue);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .setup-input-row{display:flex;gap:8px}
+    .setup-input{flex:1;padding:11px 14px;border:1px solid var(--blue-border);border-radius:10px;
+      font-size:13px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--text);outline:none}
+    .setup-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,0.1)}
+    .setup-save{padding:11px 18px;background:var(--blue);color:#fff;border:none;border-radius:10px;
+      font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;transition:background 0.2s}
+    .setup-save:hover{background:#0C447C}
+    .setup-hint{font-size:11px;color:#378ADD;margin-top:8px;line-height:1.5}
+    .setup-hint a{color:var(--blue)}
+    .setup-steps{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+    .setup-step{display:flex;align-items:flex-start;gap:12px;background:#fff;border-radius:var(--radius-sm);padding:12px 14px}
+    .step-num{width:24px;height:24px;background:var(--blue);color:#fff;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;margin-top:1px}
+    .step-text{font-size:13px;color:var(--text);line-height:1.5}
+    .step-text strong{font-weight:500}
+    .btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+      padding:15px;background:var(--sage);color:#fff;border:none;border-radius:14px;
+      font-size:15px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;
+      transition:background 0.2s,transform 0.1s;margin-top:8px}
+    .btn-primary:hover{background:#27500A}
+    .btn-primary:active{transform:scale(0.98)}
+    .btn-primary svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .api-ok-row{display:none;align-items:center;gap:8px;padding:10px 0}
+    .api-ok-row svg{width:16px;height:16px;stroke:var(--sage);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .api-ok-row span{font-size:13px;color:var(--sage);font-weight:500}
+    .api-change{margin-left:auto;font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+    /* ─── MAIN ─── */
+    #mainScreen{padding-bottom:80px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 0}
+    .topbar-logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--text)}
+    .topbar-logo span{color:var(--sage)}
+    .topbar-btns{display:flex;gap:8px}
+    .icon-btn{width:36px;height:36px;background:var(--bg);border:none;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:background 0.2s}
+    .icon-btn:hover{background:var(--border)}
+    .icon-btn svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .badge{position:absolute;top:-3px;right:-3px;width:16px;height:16px;background:var(--coral);
+      color:#fff;border-radius:50%;font-size:9px;font-weight:600;display:flex;align-items:center;justify-content:center;
+      border:2px solid var(--cream);display:none}
+
+    /* camera area */
+    .camera-area{margin:16px 20px 0;position:relative;border-radius:var(--radius);overflow:hidden;
+      background:#000;cursor:pointer;aspect-ratio:4/3;max-height:280px}
+    .camera-area img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity 0.3s}
+    .camera-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:10px;background:linear-gradient(135deg,#1a2e0f,#2d5016)}
+    .cam-icon-wrap{width:64px;height:64px;background:rgba(255,255,255,0.1);border-radius:50%;
+      display:flex;align-items:center;justify-content:center;transition:transform 0.2s,background 0.2s}
+    .camera-area:hover .cam-icon-wrap{background:rgba(255,255,255,0.2);transform:scale(1.05)}
+    .cam-icon-wrap svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+    .cam-label{font-size:14px;color:#fff;font-weight:500}
+    .cam-sub{font-size:12px;color:rgba(255,255,255,0.6)}
+    .camera-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    .camera-overlay{position:absolute;bottom:0;left:0;right:0;padding:24px 14px 14px;
+      background:linear-gradient(transparent,rgba(0,0,0,0.5));display:flex;justify-content:flex-end;
+      opacity:0;transition:opacity 0.2s;pointer-events:none}
+    .camera-overlay.show{opacity:1;pointer-events:auto}
+    .overlay-btn{background:rgba(255,255,255,0.9);border:none;padding:7px 14px;border-radius:20px;
+      font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text)}
+
+    /* analyze btn */
+    .analyze-wrap{padding:12px 20px 0}
+    .analyze-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+      padding:15px;background:var(--sage);color:#fff;border:none;border-radius:14px;
+      font-size:15px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;
+      transition:background 0.2s,transform 0.1s,box-shadow 0.2s;
+      box-shadow:0 4px 12px rgba(59,109,17,0.3)}
+    .analyze-btn:hover{background:#27500A;box-shadow:0 6px 20px rgba(59,109,17,0.4)}
+    .analyze-btn:active{transform:scale(0.98)}
+    .analyze-btn:disabled{background:var(--border);color:var(--muted);cursor:default;transform:none;box-shadow:none}
+    .analyze-btn svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+    /* loading */
+    .loading-wrap{display:none;padding:32px 20px;text-align:center}
+    .loading-wrap.show{display:block}
+    .food-loader{display:flex;justify-content:center;gap:6px;margin-bottom:16px}
+    .food-dot{width:12px;height:12px;border-radius:50%;animation:foodBounce 1.2s ease-in-out infinite}
+    .food-dot:nth-child(1){background:var(--sage);animation-delay:0s}
+    .food-dot:nth-child(2){background:var(--amber);animation-delay:0.15s}
+    .food-dot:nth-child(3){background:var(--coral);animation-delay:0.3s}
+    @keyframes foodBounce{0%,60%,100%{transform:translateY(0);opacity:0.5}30%{transform:translateY(-10px);opacity:1}}
+    .loading-text{font-size:14px;color:var(--muted);margin-bottom:4px}
+    .loading-sub{font-size:12px;color:var(--border)}
+    .progress-bar{height:3px;background:var(--border);border-radius:2px;margin:16px 0 0;overflow:hidden}
+    .progress-fill{height:100%;background:linear-gradient(90deg,var(--sage),var(--sage-mid));
+      border-radius:2px;width:0%;animation:progressAnim 3s ease forwards}
+    @keyframes progressAnim{0%{width:0%}80%{width:85%}100%{width:85%}}
+
+    /* error */
+    .error-bar{background:var(--coral-light);border:1px solid var(--coral-border);border-radius:var(--radius-sm);
+      padding:12px 16px;margin:12px 20px 0;font-size:13px;color:var(--coral);display:none;line-height:1.4}
+    .error-bar.show{display:block}
+
+    /* ─── RESULTS ─── */
+    .result-wrap{display:none;padding:16px 20px 0}
+    .result-wrap.show{display:block;animation:fadeUp 0.4s ease both}
+
+    /* hero result card */
+    .result-hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow)}
+    .result-img{width:100%;height:160px;object-fit:cover;display:block}
+    .result-hero-body{padding:16px}
+    .dish-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;line-height:1.2;margin-bottom:4px}
+    .dish-desc{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+    .score-row{display:flex;align-items:center;justify-content:space-between;
+      padding-top:14px;border-top:0.5px solid var(--border)}
+    .score-left{display:flex;align-items:center;gap:8px}
+    .score-circle{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      font-family:'Playfair Display',serif;font-size:16px;font-weight:600;flex-shrink:0}
+    .score-circle.excellent{background:var(--sage-light);color:var(--sage)}
+    .score-circle.good{background:var(--amber-light);color:var(--amber)}
+    .score-circle.poor{background:var(--coral-light);color:var(--coral)}
+    .score-label{font-size:12px;color:var(--muted)}
+    .score-label strong{display:block;font-size:13px;color:var(--text);font-weight:500}
+    .stars-row{display:flex;gap:3px}
+
+    /* calories big card */
+    .cal-card{background:var(--amber-light);border:1px solid var(--amber-border);border-radius:var(--radius);
+      padding:18px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;
+      box-shadow:var(--shadow)}
+    .cal-left .cal-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.8px;color:var(--amber);margin-bottom:4px}
+    .cal-num{font-family:'Playfair Display',serif;font-size:44px;font-weight:700;color:var(--amber);line-height:1;
+      counter-reset:num;animation:countUp 1s ease both}
+    .cal-unit{font-size:13px;color:var(--amber);opacity:0.8;margin-top:2px}
+    .cal-icon{width:52px;height:52px;background:rgba(186,117,23,0.12);border-radius:50%;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .cal-icon svg{width:24px;height:24px;stroke:var(--amber);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+    /* tabs */
+    .tabs{display:flex;gap:2px;background:var(--bg);border-radius:12px;padding:3px;margin-bottom:12px}
+    .tab{flex:1;padding:9px 6px;border:none;background:none;border-radius:10px;font-size:13px;font-weight:400;
+      font-family:'DM Sans',sans-serif;color:var(--muted);cursor:pointer;transition:all 0.2s}
+    .tab.active{background:var(--surface);color:var(--text);font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+
+    .tab-panel{display:none}
+    .tab-panel.active{display:block;animation:fadeUp 0.25s ease both}
+
+    /* macros */
+    .macros-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+    .macro-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 10px 12px;
+      text-align:center;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s}
+    .macro-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+    .macro-val{font-family:'Playfair Display',serif;font-size:24px;font-weight:600;line-height:1}
+    .macro-unit{font-size:11px;color:var(--muted)}
+    .macro-val.prot{color:var(--blue)}
+    .macro-val.carb{color:var(--amber)}
+    .macro-val.fat{color:var(--coral)}
+    .macro-label{font-size:11px;color:var(--muted);margin-top:5px}
+    .macro-bar-track{height:4px;background:var(--bg);border-radius:2px;margin-top:10px;overflow:hidden}
+    .macro-bar-fill{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.22,1,.36,1)}
+    .macro-bar-fill.prot{background:var(--blue)}
+    .macro-bar-fill.carb{background:var(--amber)}
+    .macro-bar-fill.fat{background:var(--coral)}
+
+    /* donut chart */
+    .donut-wrap{display:flex;align-items:center;gap:20px;background:var(--surface);
+      border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px}
+    .donut-svg{flex-shrink:0;transform:rotate(-90deg)}
+    .donut-legend{display:flex;flex-direction:column;gap:10px;flex:1}
+    .legend-item{display:flex;align-items:center;gap:8px}
+    .legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+    .legend-dot.prot{background:var(--blue)}
+    .legend-dot.carb{background:var(--amber)}
+    .legend-dot.fat{background:var(--coral)}
+    .legend-name{font-size:12px;color:var(--muted);flex:1}
+    .legend-pct{font-size:13px;font-weight:500;color:var(--text)}
+
+    /* nutrients */
+    .nutrient-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      padding:4px 0;margin-bottom:12px}
+    .nutrient-row{display:flex;align-items:center;padding:11px 16px;cursor:pointer;transition:background 0.15s;position:relative}
+    .nutrient-row:hover{background:var(--bg)}
+    .nutrient-row:not(:last-child)::after{content:'';position:absolute;bottom:0;left:16px;right:16px;height:0.5px;background:var(--border)}
+    .n-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+      margin-right:10px;flex-shrink:0;font-size:15px}
+    .n-name{font-size:13px;color:var(--text);flex:1}
+    .n-right{display:flex;align-items:center;gap:10px}
+    .n-val{font-size:13px;font-weight:500;min-width:48px;text-align:right}
+    .n-pill{font-size:10px;font-weight:500;padding:3px 8px;border-radius:20px}
+    .n-pill.low{background:var(--blue-light);color:var(--blue)}
+    .n-pill.med{background:var(--amber-light);color:var(--amber)}
+    .n-pill.high{background:var(--coral-light);color:var(--coral)}
+    .bar-wrap{width:50px;height:4px;background:var(--bg);border-radius:2px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.22,1,.36,1)}
+    .bar-fill.low{background:var(--blue)}
+    .bar-fill.med{background:var(--amber)}
+    .bar-fill.high{background:var(--coral)}
+
+    /* advice */
+    .advice-card{border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:default}
+    .advice-card.good{background:var(--sage-light);border:1px solid var(--sage-border)}
+    .advice-card.warn{background:var(--amber-light);border:1px solid var(--amber-border)}
+    .advice-title{font-size:13px;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+    .advice-title.good{color:var(--sage)}
+    .advice-title.warn{color:var(--amber)}
+    .advice-list{list-style:none;display:flex;flex-direction:column;gap:5px}
+    .advice-list li{font-size:13px;color:var(--muted);padding-left:14px;position:relative;line-height:1.5}
+    .advice-list li::before{content:'·';position:absolute;left:0;font-weight:700;font-size:16px;line-height:1.2}
+
+    /* history tab panel */
+    .history-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px}
+    .history-empty svg{width:40px;height:40px;stroke:var(--border);fill:none;stroke-width:1.4;
+      stroke-linecap:round;stroke-linejoin:round;margin:0 auto 12px;display:block}
+    .history-list{display:flex;flex-direction:column;gap:8px}
+    .history-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+      display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s}
+    .history-item:hover{transform:translateX(4px);box-shadow:var(--shadow)}
+    .history-thumb{width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--bg)}
+    .history-thumb-placeholder{width:52px;height:52px;border-radius:10px;background:var(--sage-light);
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px}
+    .history-info{flex:1;min-width:0}
+    .history-name{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .history-meta{font-size:12px;color:var(--muted);margin-top:2px}
+    .history-cals{font-size:13px;font-weight:500;color:var(--amber);flex-shrink:0}
+    .history-score{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      font-size:11px;font-weight:600;flex-shrink:0}
+    .history-score.excellent{background:var(--sage-light);color:var(--sage)}
+    .history-score.good{background:var(--amber-light);color:var(--amber)}
+    .history-score.poor{background:var(--coral-light);color:var(--coral)}
+
+    /* bottom nav */
+    .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+      width:100%;max-width:430px;background:rgba(253,250,245,0.92);backdrop-filter:blur(12px);
+      border-top:0.5px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+    .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 8px;
+      background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:10px;
+      color:var(--muted);transition:color 0.2s}
+    .nav-btn.active{color:var(--sage)}
+    .nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform 0.2s}
+    .nav-btn.active svg{transform:scale(1.1)}
+    .nav-btn.center-btn{position:relative;top:-8px}
+    .nav-btn.center-btn .nav-cam{width:52px;height:52px;background:var(--sage);border-radius:50%;
+      display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(59,109,17,0.4);transition:transform 0.2s,box-shadow 0.2s}
+    .nav-btn.center-btn:hover .nav-cam{transform:scale(1.05);box-shadow:0 6px 16px rgba(59,109,17,0.5)}
+    .nav-btn.center-btn svg{stroke:#fff;width:24px;height:24px}
+    .nav-label{display:block}
+
+    /* ─── HISTORY SCREEN ─── */
+    #historyScreen{padding:0 0 80px}
+    .history-header{padding:48px 20px 20px;border-bottom:0.5px solid var(--border)}
+    .history-header h1{font-family:'Playfair Display',serif;font-size:24px;font-weight:600}
+    .history-header p{font-size:13px;color:var(--muted);margin-top:4px}
+    .history-content{padding:16px 20px}
+    .history-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px}
+    .stat-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--text)}
+    .stat-label{font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:0.5px}
+    .clear-btn{background:none;border:1px solid var(--coral-border);color:var(--coral);border-radius:10px;
+      padding:8px 14px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:12px;width:100%}
+    .clear-btn:hover{background:var(--coral-light)}
+
+    /* ─── SETTINGS SCREEN ─── */
+    #settingsScreen{padding:0 0 80px}
+    .settings-header{padding:48px 20px 20px;border-bottom:0.5px solid var(--border)}
+    .settings-header h1{font-family:'Playfair Display',serif;font-size:24px;font-weight:600}
+    .settings-content{padding:16px 20px}
+    .settings-section{margin-bottom:20px}
+    .settings-section-title{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;
+      letter-spacing:0.8px;margin-bottom:8px;padding:0 4px}
+    .settings-row{background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;
+      gap:12px;padding:14px 16px;cursor:pointer;transition:background 0.15s;position:relative}
+    .settings-row:first-of-type{border-radius:var(--radius-sm) var(--radius-sm) 0 0}
+    .settings-row:last-of-type{border-radius:0 0 var(--radius-sm) var(--radius-sm)}
+    .settings-row:only-of-type{border-radius:var(--radius-sm)}
+    .settings-row:not(:last-of-type){border-bottom:none}
+    .settings-row:hover{background:var(--bg)}
+    .settings-row-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .settings-row-icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .settings-row-icon.green{background:var(--sage-light);color:var(--sage)}
+    .settings-row-icon.blue{background:var(--blue-light);color:var(--blue)}
+    .settings-row-icon.coral{background:var(--coral-light);color:var(--coral)}
+    .settings-row-text{flex:1}
+    .settings-row-title{font-size:14px;color:var(--text)}
+    .settings-row-sub{font-size:12px;color:var(--muted);margin-top:1px}
+    .settings-row-arrow{width:16px;height:16px;stroke:var(--border);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .toggle{width:44px;height:26px;background:var(--border);border-radius:13px;position:relative;
+      cursor:pointer;transition:background 0.25s;flex-shrink:0;border:none}
+    .toggle.on{background:var(--sage)}
+    .toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;
+      background:#fff;border-radius:50%;transition:transform 0.25s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+    .toggle.on::after{transform:translateX(18px)}
+    .version-text{text-align:center;font-size:11px;color:var(--border);padding:20px}
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}
+    .skeleton{background:linear-gradient(90deg,var(--bg) 25%,var(--border) 50%,var(--bg) 75%);
+      background-size:400px 100%;animation:shimmer 1.5s infinite;border-radius:6px}
+
+    /* toast */
+    .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);
+      background:#2C2C2A;color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;
+      opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:200}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+  </style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════ SPLASH ══════ -->
+<div id="splashScreen" class="screen active">
+  <div class="splash-logo">
+    <div class="splash-icon">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="4"/><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/></svg>
+    </div>
+    <div class="splash-title">FoodLens</div>
+    <div class="splash-sub">Análisis nutricional con IA</div>
+  </div>
+</div>
+
+<!-- ══════ SETUP ══════ -->
+<div id="setupScreen" class="screen">
+  <div class="setup-tag">
+    <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:var(--blue);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    Configuración inicial
+  </div>
+  <h1 class="setup-h">Configura tu<br>API key gratis</h1>
+  <p class="setup-p">FoodLens usa Google Gemini para analizar tus fotos. La API es gratuita y solo necesitas una cuenta de Google.</p>
+
+  <div class="setup-card">
+    <div class="setup-label">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Google Gemini API Key
+    </div>
+    <div id="setupInputRow" class="setup-input-row">
+      <input type="password" id="setupApiInput" class="setup-input" placeholder="AIza…" autocomplete="off">
+      <button class="setup-save" onclick="saveApiKeySetup()">Guardar</button>
+    </div>
+    <div id="setupApiOk" class="api-ok-row">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      <span>API key guardada</span>
+      <button class="api-change" onclick="changeApiKeySetup()">Cambiar</button>
+    </div>
+    <p class="setup-hint">
+      Consíguela gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a> → Get API key.<br>
+      1.500 análisis/día sin coste. Solo se guarda en tu navegador.
+    </p>
+  </div>
+
+  <div class="setup-steps">
+    <div class="setup-step"><div class="step-num">1</div><div class="step-text">Ve a <strong>aistudio.google.com</strong> e inicia sesión con tu cuenta Google</div></div>
+    <div class="setup-step"><div class="step-num">2</div><div class="step-text">Pulsa <strong>Get API key → Create API key</strong></div></div>
+    <div class="setup-step"><div class="step-num">3</div><div class="step-text">Copia la clave (empieza por <strong>AIza…</strong>) y pégala arriba</div></div>
+  </div>
+
+  <button class="btn-primary" id="startAppBtn" style="margin:24px 0 0" onclick="goToMain()">
+    <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    Empezar a usar FoodLens
+  </button>
+</div>
+
+<!-- ══════ MAIN ══════ -->
+<div id="mainScreen" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">Food<span>Lens</span></div>
+    <div class="topbar-btns">
+      <button class="icon-btn" onclick="goSettings()" title="Ajustes">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Camera -->
+  <div class="camera-area" id="cameraArea">
+    <div class="camera-placeholder" id="cameraPlaceholder">
+      <div class="cam-icon-wrap">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+      <div class="cam-label">Fotografía tu plato</div>
+      <div class="cam-sub">Toca para abrir cámara o galería</div>
+    </div>
+    <img id="cameraPreview" style="display:none;width:100%;height:100%;object-fit:cover">
+    <div class="camera-overlay" id="cameraOverlay">
+      <button class="overlay-btn" id="changePhotoBtn">Cambiar foto</button>
+    </div>
+    <input type="file" accept="image/*" capture="environment" id="fileInput">
+  </div>
+
+  <!-- Analyze -->
+  <div class="analyze-wrap">
+    <button class="analyze-btn" id="analyzeBtn" disabled>
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+      Analizar plato
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-wrap" id="loadingWrap">
+    <div class="food-loader">
+      <div class="food-dot"></div><div class="food-dot"></div><div class="food-dot"></div>
+    </div>
+    <div class="loading-text">Analizando tu plato…</div>
+    <div class="loading-sub" id="loadingStep">Identificando ingredientes</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-bar" id="errorBar"></div>
+
+  <!-- Result -->
+  <div class="result-wrap" id="resultWrap">
+    <div class="result-hero">
+      <img class="result-img" id="resultImg" src="" alt="">
+      <div class="result-hero-body">
+        <div class="dish-name" id="dishName"></div>
+        <div class="dish-desc" id="dishDesc"></div>
+        <div class="score-row">
+          <div class="score-left">
+            <div class="score-circle" id="scoreCircle"></div>
+            <div class="score-label"><strong id="scoreLabel"></strong>Valor nutricional</div>
+          </div>
+          <div class="stars-row" id="starsRow"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cal-card">
+      <div class="cal-left">
+        <div class="cal-label">Calorías totales</div>
+        <div class="cal-num" id="calNum">—</div>
+        <div class="cal-unit">kcal estimadas</div>
+      </div>
+      <div class="cal-icon"><svg viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8a8 8 0 0 0 16 0c0-3.32-2.67-7.25-8-11.8z"/></svg></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('macros')">Macros</button>
+      <button class="tab" onclick="switchTab('micros')">Micronutrientes</button>
+      <button class="tab" onclick="switchTab('advice')">Consejos</button>
+    </div>
+
+    <div id="tabMacros" class="tab-panel active">
+      <div class="macros-grid" id="macrosGrid"></div>
+      <div class="donut-wrap" id="donutWrap">
+        <svg class="donut-svg" id="donutSvg" width="100" height="100" viewBox="0 0 100 100"></svg>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+
+    <div id="tabMicros" class="tab-panel">
+      <div class="nutrient-card" id="nutrientCard"></div>
+    </div>
+
+    <div id="tabAdvice" class="tab-panel">
+      <div id="adviceSection"></div>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="showNavTab('home')" id="navHome">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="nav-label">Inicio</span>
+    </button>
+    <button class="nav-btn center-btn" onclick="triggerCamera()">
+      <div class="nav-cam">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+      <span class="nav-label" style="color:var(--sage);font-weight:500">Foto</span>
+    </button>
+    <button class="nav-btn" onclick="goHistory()" id="navHistory">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="nav-label">Historial</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ══════ HISTORY ══════ -->
+<div id="historyScreen" class="screen">
+  <div class="history-header">
+    <h1>Historial</h1>
+    <p>Tus análisis recientes</p>
+  </div>
+  <div class="history-content">
+    <div class="history-stats" id="historyStats"></div>
+    <div id="historyList"></div>
+    <button class="clear-btn" id="clearHistoryBtn" onclick="clearHistory()" style="display:none">Borrar historial</button>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="showNavTab('home')" id="navHome2">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="nav-label">Inicio</span>
+    </button>
+    <button class="nav-btn center-btn" onclick="triggerCameraFromHistory()">
+      <div class="nav-cam">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+      <span class="nav-label" style="color:var(--sage);font-weight:500">Foto</span>
+    </button>
+    <button class="nav-btn active" onclick="goHistory()" id="navHistory2">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="nav-label">Historial</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ══════ SETTINGS ══════ -->
+<div id="settingsScreen" class="screen">
+  <div class="settings-header">
+    <h1>Ajustes</h1>
+  </div>
+  <div class="settings-content">
+    <div class="settings-section">
+      <div class="settings-section-title">API</div>
+      <div class="settings-row" onclick="editApiKey()" style="border-radius:var(--radius-sm)">
+        <div class="settings-row-icon blue"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="settings-row-text">
+          <div class="settings-row-title">Gemini API Key</div>
+          <div class="settings-row-sub" id="apiKeyStatus">No configurada</div>
+        </div>
+        <svg class="settings-row-arrow" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Datos</div>
+      <div class="settings-row" onclick="clearHistory()" style="border-radius:var(--radius-sm)">
+        <div class="settings-row-icon coral"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></div>
+        <div class="settings-row-text">
+          <div class="settings-row-title">Borrar historial</div>
+          <div class="settings-row-sub" id="historyCountSetting">0 análisis guardados</div>
+        </div>
+        <svg class="settings-row-arrow" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Acerca de</div>
+      <div class="settings-row" style="border-radius:var(--radius-sm) var(--radius-sm) 0 0;cursor:default">
+        <div class="settings-row-icon green"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="4"/><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="settings-row-text">
+          <div class="settings-row-title">FoodLens</div>
+          <div class="settings-row-sub">Versión 2.0 · Powered by Gemini</div>
+        </div>
+      </div>
+      <div class="settings-row" style="border-radius:0 0 var(--radius-sm) var(--radius-sm);cursor:default">
+        <div class="settings-row-icon blue"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        <div class="settings-row-text">
+          <div class="settings-row-title">Datos guardados localmente</div>
+          <div class="settings-row-sub">Tu API key solo está en tu navegador</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="showNavTab('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="nav-label">Inicio</span>
+    </button>
+    <button class="nav-btn center-btn" onclick="triggerCameraFromHistory()">
+      <div class="nav-cam">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+      <span class="nav-label" style="color:var(--sage);font-weight:500">Foto</span>
+    </button>
+    <button class="nav-btn" onclick="goHistory()">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="nav-label">Historial</span>
+    </button>
+  </nav>
+</div>
+
+<script>
+// ── State ──
+let apiKey = localStorage.getItem('gemini_api_key') || '';
+let base64Data = '', mimeType = 'image/jpeg';
+let history = JSON.parse(localStorage.getItem('foodlens_history') || '[]');
+let currentTab = 'macros';
+
+const NUTRIENT_ICONS = {
+  'Vitamina C':'🍊','Calcio':'🦷','Hierro':'🩸','Fibra':'🌾','Sodio':'🧂',
+  'Vitamina A':'🥕','Vitamina D':'☀️','Vitamina B12':'💊','Potasio':'🍌','Zinc':'⚡'
+};
+
+// ── Splash ──
+setTimeout(() => {
+  showScreen(apiKey ? 'mainScreen' : 'setupScreen');
+}, 1800);
+
+// ── Screens ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── Setup ──
+function saveApiKeySetup() {
+  const val = document.getElementById('setupApiInput').value.trim();
+  if (!val.startsWith('AIza')) { showToast('La key debe empezar por AIza…'); return; }
+  apiKey = val;
+  localStorage.setItem('gemini_api_key', val);
+  document.getElementById('setupInputRow').style.display = 'none';
+  document.getElementById('setupApiOk').style.display = 'flex';
+  showToast('✓ API key guardada');
+}
+function changeApiKeySetup() {
+  document.getElementById('setupInputRow').style.display = 'flex';
+  document.getElementById('setupApiOk').style.display = 'none';
+  document.getElementById('setupApiInput').value = '';
+}
+function goToMain() {
+  if (!apiKey) { showToast('Introduce tu API key primero'); return; }
+  showScreen('mainScreen');
+}
+
+// ── Navigation ──
+function showNavTab(tab) {
+  showScreen('mainScreen');
+}
+function goHistory() {
+  renderHistory();
+  showScreen('historyScreen');
+}
+function goSettings() {
+  updateSettingsUI();
+  showScreen('settingsScreen');
+}
+function triggerCamera() { document.getElementById('fileInput').click(); }
+function triggerCameraFromHistory() { showScreen('mainScreen'); setTimeout(()=>document.getElementById('fileInput').click(),300); }
+
+// ── File input ──
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  mimeType = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    base64Data = ev.target.result.split(',')[1];
+    const preview = document.getElementById('cameraPreview');
+    preview.src = ev.target.result;
+    preview.style.display = 'block';
+    document.getElementById('cameraPlaceholder').style.display = 'none';
+    document.getElementById('cameraOverlay').classList.add('show');
+    document.getElementById('analyzeBtn').disabled = false;
+    document.getElementById('resultWrap').classList.remove('show');
+    document.getElementById('errorBar').classList.remove('show');
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById('changePhotoBtn').addEventListener('click', () => {
+  document.getElementById('fileInput').click();
+});
+
+// ── Tabs ──
+function switchTab(name) {
+  currentTab = name;
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['macros','micros','advice'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tabMacros').classList.toggle('active', name==='macros');
+  document.getElementById('tabMicros').classList.toggle('active', name==='micros');
+  document.getElementById('tabAdvice').classList.toggle('active', name==='advice');
+}
+
+// ── Analyze ──
+document.getElementById('analyzeBtn').addEventListener('click', analyze);
+async function analyze() {
+  if (!base64Data) return;
+  if (!apiKey) { showToast('Configura tu API key en Ajustes'); goSettings(); return; }
+
+  const btn = document.getElementById('analyzeBtn');
+  const loadWrap = document.getElementById('loadingWrap');
+  const errorBar = document.getElementById('errorBar');
+  const resultWrap = document.getElementById('resultWrap');
+
+  btn.disabled = true;
+  loadWrap.classList.add('show');
+  resultWrap.classList.remove('show');
+  errorBar.classList.remove('show');
+
+  // Animated loading steps
+  const steps = ['Identificando ingredientes…','Calculando macronutrientes…','Analizando micronutrientes…','Generando recomendaciones…'];
+  let si = 0;
+  const stepEl = document.getElementById('loadingStep');
+  const stepInterval = setInterval(() => {
+    si = (si + 1) % steps.length;
+    stepEl.textContent = steps[si];
+  }, 900);
+
+  // Reset progress bar
+  const pf = document.getElementById('progressFill');
+  pf.style.animation = 'none'; pf.offsetHeight;
+  pf.style.animation = 'progressAnim 3s ease forwards';
+
+  const prompt = `Eres un nutricionista experto. Analiza la imagen y responde ÚNICAMENTE con JSON válido sin markdown. Esquema exacto:
+{"nombre":"nombre en español","descripcion":"1-2 frases apetitosas","puntuacion":<1-10>,"calorias":<kcal entero>,"macros":{"proteinas":<g>,"carbohidratos":<g>,"grasas":<g>},"micronutrientes":[{"nombre":"Vitamina C","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Calcio","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Hierro","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Fibra","valor":"X g","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Sodio","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Vitamina A","valor":"X mcg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"}],"aspectos_positivos":["punto 1","punto 2","punto 3"],"aspectos_mejorar":["aspecto 1","aspecto 2"]}
+Si no hay comida: {"error":"No se detecta comida"}`;
+
+  try {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          contents:[{parts:[{inline_data:{mime_type:mimeType,data:base64Data}},{text:prompt}]}],
+          generationConfig:{temperature:0.2,maxOutputTokens:1200}
+        })
+      }
+    );
+    clearInterval(stepInterval);
+    if (!resp.ok) { const e = await resp.json().catch(()=>({})); throw new Error(e.error?.message||`HTTP ${resp.status}`); }
+    const data = await resp.json();
+    const raw = (data.candidates?.[0]?.content?.parts?.[0]?.text||'').replace(/```json\n?|```/g,'').trim();
+    const parsed = JSON.parse(raw);
+    if (parsed.error) { showErrorBar(parsed.error); }
+    else { renderResult(parsed); saveToHistory(parsed); }
+  } catch(err) {
+    clearInterval(stepInterval);
+    showErrorBar('Error: ' + err.message);
+  } finally {
+    loadWrap.classList.remove('show');
+    btn.disabled = false;
+  }
+}
+
+function showErrorBar(msg) {
+  const eb = document.getElementById('errorBar');
+  eb.textContent = msg;
+  eb.classList.add('show');
+}
+
+// ── Render Result ──
+function renderResult(d) {
+  document.getElementById('resultImg').src = document.getElementById('cameraPreview').src;
+  document.getElementById('dishName').textContent = d.nombre || 'Plato';
+  document.getElementById('dishDesc').textContent = d.descripcion || '';
+
+  const score = Math.min(10, Math.max(1, Math.round(d.puntuacion||5)));
+  const cls = score>=7?'excellent':score>=4?'good':'poor';
+  const circle = document.getElementById('scoreCircle');
+  circle.textContent = score;
+  circle.className = 'score-circle '+cls;
+  document.getElementById('scoreLabel').textContent = score>=7?'Excelente':score>=4?'Aceptable':'Mejorable';
+
+  const starsEl = document.getElementById('starsRow');
+  starsEl.innerHTML = '';
+  const filled = Math.round(score/2);
+  for(let i=1;i<=5;i++){
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('viewBox','0 0 24 24'); svg.setAttribute('width','15'); svg.setAttribute('height','15');
+    const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d','M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z');
+    p.style.fill = i<=filled?'#BA7517':'#D3D1C7'; svg.appendChild(p); starsEl.appendChild(svg);
+  }
+
+  // Animated calorie counter
+  const target = Math.round(d.calorias||0);
+  const calEl = document.getElementById('calNum');
+  let cur = 0; const step = Math.ceil(target/40);
+  const counter = setInterval(()=>{ cur=Math.min(cur+step,target); calEl.textContent=cur.toLocaleString(); if(cur>=target)clearInterval(counter); },30);
+
+  // Macros
+  const m = d.macros||{};
+  const protG = Math.round(m.proteinas||0), carbG = Math.round(m.carbohidratos||0), fatG = Math.round(m.grasas||0);
+  const totalCal = (protG*4)+(carbG*4)+(fatG*9)||1;
+  const pProt=Math.round(protG*4/totalCal*100), pCarb=Math.round(carbG*4/totalCal*100), pFat=Math.round(fatG*9/totalCal*100);
+
+  document.getElementById('macrosGrid').innerHTML = [
+    {val:protG,label:'Proteínas',cls:'prot',pct:pProt},
+    {val:carbG,label:'Carbohidratos',cls:'carb',pct:pCarb},
+    {val:fatG,label:'Grasas',cls:'fat',pct:pFat}
+  ].map(x=>`<div class="macro-card" onclick="showToast('${x.label}: ${x.val}g (${x.pct}% de calorías)')">
+    <div class="macro-val ${x.cls}">${x.val}<span class="macro-unit">g</span></div>
+    <div class="macro-label">${x.label}</div>
+    <div class="macro-bar-track"><div class="macro-bar-fill ${x.cls}" style="width:0%" data-target="${x.pct}"></div></div>
+  </div>`).join('');
+
+  // Donut chart
+  renderDonut(pProt, pCarb, pFat);
+
+  // Micronutrients
+  document.getElementById('nutrientCard').innerHTML = (d.micronutrientes||[]).map(n=>{
+    const pct = Math.min(100,Math.max(0,n.porcentaje||0));
+    const icon = NUTRIENT_ICONS[n.nombre]||'💊';
+    return `<div class="nutrient-row" onclick="showToast('${n.nombre}: ${n.valor} · ${pct}% del valor diario')">
+      <div class="n-icon" style="background:${n.nivel==='alto'?'var(--coral-light)':n.nivel==='medio'?'var(--amber-light)':'var(--blue-light)'}">${icon}</div>
+      <div class="n-name">${n.nombre}</div>
+      <div class="n-right">
+        <span class="n-val">${n.valor}</span>
+        <span class="n-pill ${n.nivel}">${pct}%</span>
+        <div class="bar-wrap"><div class="bar-fill ${n.nivel}" style="width:0%" data-target="${pct}"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Advice
+  let adv='';
+  if((d.aspectos_positivos||[]).length){
+    adv+=`<div class="advice-card good"><div class="advice-title good"><svg viewBox="0 0 24 24" width="14" height="14" style="fill:var(--sage)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Puntos positivos</div><ul class="advice-list">${d.aspectos_positivos.map(a=>`<li>${a}</li>`).join('')}</ul></div>`;
+  }
+  if((d.aspectos_mejorar||[]).length){
+    adv+=`<div class="advice-card warn"><div class="advice-title warn"><svg viewBox="0 0 24 24" width="14" height="14" style="fill:var(--amber)"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>Aspectos a mejorar</div><ul class="advice-list">${d.aspectos_mejorar.map(a=>`<li>${a}</li>`).join('')}</ul></div>`;
+  }
+  document.getElementById('adviceSection').innerHTML = adv;
+
+  switchTab('macros');
+  document.getElementById('resultWrap').classList.add('show');
+  document.getElementById('resultWrap').scrollIntoView({behavior:'smooth',block:'start'});
+
+  // Animate bars after paint
+  setTimeout(()=>{
+    document.querySelectorAll('[data-target]').forEach(el=>{
+      el.style.width = el.dataset.target+'%';
+    });
+  },100);
+}
+
+// ── Donut ──
+function renderDonut(pProt, pCarb, pFat) {
+  const svg = document.getElementById('donutSvg');
+  const cx=50,cy=50,r=36,strokeW=14;
+  const circ = 2*Math.PI*r;
+  const colors = ['var(--blue)','var(--amber)','var(--coral)'];
+  const vals = [pProt,pCarb,pFat];
+  const labels = ['Proteínas','Carbohidratos','Grasas'];
+  let offset = 0;
+  svg.innerHTML = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--bg)" stroke-width="${strokeW}"/>`;
+  vals.forEach((v,i)=>{
+    const len = (v/100)*circ;
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx',cx); circle.setAttribute('cy',cy); circle.setAttribute('r',r);
+    circle.setAttribute('fill','none'); circle.setAttribute('stroke',colors[i]);
+    circle.setAttribute('stroke-width',strokeW);
+    circle.setAttribute('stroke-dasharray',`${len} ${circ-len}`);
+    circle.setAttribute('stroke-dashoffset',-offset);
+    circle.setAttribute('stroke-linecap','butt');
+    svg.appendChild(circle);
+    offset += len;
+  });
+  const cls=['prot','carb','fat'];
+  document.getElementById('donutLegend').innerHTML = vals.map((v,i)=>`
+    <div class="legend-item">
+      <div class="legend-dot ${cls[i]}"></div>
+      <div class="legend-name">${labels[i]}</div>
+      <div class="legend-pct">${v}%</div>
+    </div>`).join('');
+}
+
+// ── History ──
+function saveToHistory(d) {
+  const entry = {
+    id: Date.now(),
+    nombre: d.nombre,
+    calorias: d.calorias,
+    puntuacion: d.puntuacion,
+    macros: d.macros,
+    img: document.getElementById('cameraPreview').src.substring(0,200),
+    date: new Date().toLocaleDateString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})
+  };
+  history.unshift(entry);
+  if(history.length>20) history = history.slice(0,20);
+  localStorage.setItem('foodlens_history', JSON.stringify(history));
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const stats = document.getElementById('historyStats');
+  const clearBtn = document.getElementById('clearHistoryBtn');
+
+  if(!history.length){
+    stats.innerHTML='';
+    list.innerHTML=`<div class="history-empty"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Sin análisis todavía.<br>¡Fotografía tu primer plato!</div>`;
+    clearBtn.style.display='none';
+    return;
+  }
+
+  const avgCal = Math.round(history.reduce((s,h)=>s+h.calorias,0)/history.length);
+  const avgScore = (history.reduce((s,h)=>s+h.puntuacion,0)/history.length).toFixed(1);
+  stats.innerHTML=`
+    <div class="stat-card"><div class="stat-val">${history.length}</div><div class="stat-label">Análisis</div></div>
+    <div class="stat-card"><div class="stat-val">${avgCal}</div><div class="stat-label">Media kcal</div></div>
+    <div class="stat-card"><div class="stat-val">${avgScore}</div><div class="stat-label">Puntuación media</div></div>
+    <div class="stat-card"><div class="stat-val">${Math.round(history.reduce((s,h)=>s+(h.macros?.proteinas||0),0)/history.length)}g</div><div class="stat-label">Media proteínas</div></div>`;
+
+  list.innerHTML = '<div class="history-list">' + history.map(h=>{
+    const cls = h.puntuacion>=7?'excellent':h.puntuacion>=4?'good':'poor';
+    const thumb = h.img ? `<img class="history-thumb" src="${h.img}" onerror="this.style.display='none'">` : `<div class="history-thumb-placeholder">🍽️</div>`;
+    return `<div class="history-item">
+      ${thumb}
+      <div class="history-info">
+        <div class="history-name">${h.nombre}</div>
+        <div class="history-meta">${h.date}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <div class="history-cals">${h.calorias} kcal</div>
+        <div class="history-score ${cls}">${h.puntuacion}</div>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+
+  clearBtn.style.display='block';
+  updateSettingsUI();
+}
+
+function clearHistory() {
+  if(history.length && !confirm('¿Borrar todo el historial?')) return;
+  history=[];
+  localStorage.removeItem('foodlens_history');
+  renderHistory();
+  showToast('Historial borrado');
+  updateSettingsUI();
+}
+
+// ── Settings ──
+function updateSettingsUI() {
+  document.getElementById('apiKeyStatus').textContent = apiKey ? 'Configurada ✓' : 'No configurada';
+  document.getElementById('historyCountSetting').textContent = `${history.length} análisis guardados`;
+}
+function editApiKey() {
+  const key = prompt('Nueva API key de Gemini (AIza…):');
+  if(!key) return;
+  if(!key.startsWith('AIza')){ showToast('La key debe empezar por AIza…'); return; }
+  apiKey = key;
+  localStorage.setItem('gemini_api_key', key);
+  updateSettingsUI();
+  showToast('✓ API key actualizada');
+}
+
+// ── Toast ──
+let toastTimeout;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ── Init ──
+updateSettingsUI();
+</script>
+</body>
+</html>
