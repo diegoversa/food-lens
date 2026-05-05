@@ -691,7 +691,7 @@ async function analyze(){
 {"nombre":"nombre del plato en español","descripcion":"descripción apetitosa en 1-2 frases","puntuacion":<1-10>,"calorias":<kcal entero>,"macros":{"proteinas":<g>,"carbohidratos":<g>,"grasas":<g>},"micronutrientes":[{"nombre":"Vitamina C","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Calcio","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Hierro","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Fibra","valor":"X g","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Sodio","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Vitamina A","valor":"X mcg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"}],"aspectos_positivos":["punto 1","punto 2","punto 3"],"aspectos_mejorar":["aspecto 1","aspecto 2"]}
 Si no hay comida: {"error":"No se detecta comida"}`;
   try{
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:mime,data:b64}},{"text":prompt}]}],generationConfig:{temperature:0.2,maxOutputTokens:1200}})
     });
