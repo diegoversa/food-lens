@@ -707,6 +707,18 @@ Si no hay comida: {"error":"No se detecta comida"}`;
         p=parseGeminiJsonResponse(d);
         break;
       }catch(err){
+        const isMaxTokens=(err?.message||'').toUpperCase().includes('MAX_TOKENS');
+        if(isMaxTokens){
+          const compactPrompt=prompt+'\nIMPORTANTE: Responde ultra-conciso. Usa frases muy cortas y solo 3 micronutrientes (Vitamina C, Calcio, Hierro).';
+          try{
+            const d=await requestGemini(model,compactPrompt);
+            p=parseGeminiJsonResponse(d);
+            break;
+          }catch(retryErr){
+            lastErr=retryErr;
+            continue;
+          }
+        }
         lastErr=err;
       }
     }
@@ -727,7 +739,7 @@ async function requestGemini(model,promptText){
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
       contents:[{parts:[{inline_data:{mime_type:mime,data:b64}},{"text":promptText}]}],
-      generationConfig:{temperature:0.2,maxOutputTokens:1200,responseMimeType:'application/json'}
+      generationConfig:{temperature:0.1,maxOutputTokens:2048,responseMimeType:'application/json'}
     })
   });
   if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${res.status}`);}
