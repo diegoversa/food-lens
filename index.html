@@ -693,7 +693,14 @@ Si no hay comida: {"error":"No se detecta comida"}`;
   try{
     const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:mime,data:b64}},{"text":prompt}]}],generationConfig:{temperature:0.2,maxOutputTokens:1200}})
+      body:JSON.stringify({
+        contents:[{parts:[{inline_data:{mime_type:mime,data:b64}},{"text":prompt}]}],
+        generationConfig:{
+          temperature:0.2,
+          maxOutputTokens:1200,
+          responseMimeType:'application/json'
+        }
+      })
     });
     clearInterval(iv);
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${res.status}`);}
@@ -719,9 +726,13 @@ function parseGeminiJsonResponse(d){
   const first=clean.indexOf('{');
   const last=clean.lastIndexOf('}');
   if(first===-1||last===-1||last<=first){
-    throw new Error('Gemini devolvió respuesta sin JSON válido');
+    throw new Error(`Gemini devolvió respuesta sin JSON válido: ${clean.slice(0,140)}`);
   }
-  return JSON.parse(clean.slice(first,last+1));
+  try{
+    return JSON.parse(clean.slice(first,last+1));
+  }catch{
+    throw new Error(`JSON inválido en respuesta de Gemini: ${clean.slice(0,140)}`);
+  }
 }
 
 function explainApiError(message=''){
