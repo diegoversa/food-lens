@@ -701,7 +701,10 @@ Si no hay comida: {"error":"No se detecta comida"}`;
       p=parseGeminiJsonResponse(d);
     }
     clearInterval(iv);
-    if(p.error){showErr(p.error);}else{renderResult(p);saveHist(p);} 
+    if(p.error){showErr(p.error);}else{
+      document.getElementById('errorBar').classList.remove('show');
+      renderResult(p);saveHist(p);
+    } 
   }catch(e){clearInterval(iv);showErr(explainApiError(e.message));}
   finally{lw.classList.remove('show');btn.disabled=false;}
 }
@@ -755,6 +758,7 @@ function explainApiError(message=''){
 
 // ── Render result ──
 function renderResult(d){
+  document.getElementById('errorBar').classList.remove('show');
   document.getElementById('resultImg').src=document.getElementById('heroImg').src;
   document.getElementById('dishName').textContent=d.nombre||'Plato';
   document.getElementById('dishDesc').textContent=d.descripcion||'';
