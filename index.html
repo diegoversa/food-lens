@@ -698,9 +698,13 @@ Si no hay comida: {"error":"No se detecta comida"}`;
     clearInterval(iv);
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${res.status}`);}
     const d=await res.json();
-    const raw=(d.candidates?.[0]?.content?.parts?.[0]?.text||'').replace(/```json\n?|```/g,'').trim();
-    const p=JSON.parse(raw);
-    if(p.error){showErr(p.error);}else{renderResult(p);saveHist(p);}
+    const parts=d.candidates?.[0]?.content?.parts||[];
+    const textParts=parts.map(x=>x.text).filter(Boolean);
+    const rawText=textParts.join('\n').replace(/```json\n?|```/g,'').trim();
+    const jsonMatch=rawText.match(/\{[\s\S]*\}/);
+    if(!jsonMatch){throw new Error('Gemini devolvió una respuesta sin JSON válido');}
+    const p=JSON.parse(jsonMatch[0]);
+    if(p.error){showErr(p.error);}else{renderResult(p);saveHist(p);} 
   }catch(e){clearInterval(iv);showErr('Error: '+e.message);}
   finally{lw.classList.remove('show');btn.disabled=false;}
 }
