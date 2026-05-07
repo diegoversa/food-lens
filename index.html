@@ -698,14 +698,30 @@ Si no hay comida: {"error":"No se detecta comida"}`;
     clearInterval(iv);
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${res.status}`);}
     const d=await res.json();
-    const raw=(d.candidates?.[0]?.content?.parts?.[0]?.text||'').replace(/```json\n?|```/g,'').trim();
-    const p=JSON.parse(raw);
-    if(p.error){showErr(p.error);}else{renderResult(p);saveHist(p);}
-  }catch(e){clearInterval(iv);showErr('Error: '+e.message);}
+    const parts=d.candidates?.[0]?.content?.parts||[];
+    const textParts=parts.map(x=>x.text).filter(Boolean);
+    const rawText=textParts.join('\n').replace(/```json\n?|```/g,'').trim();
+    const jsonMatch=rawText.match(/\{[\s\S]*\}/);
+    if(!jsonMatch){throw new Error('Gemini devolvió una respuesta sin JSON válido');}
+    const p=JSON.parse(jsonMatch[0]);
+    if(p.error){showErr(p.error);}else{renderResult(p);saveHist(p);} 
+  }catch(e){clearInterval(iv);showErr(explainApiError(e.message));}
   finally{lw.classList.remove('show');btn.disabled=false;}
 }
 
 function showErr(m){const e=document.getElementById('errorBar');e.textContent=m;e.classList.add('show');}
+
+
+function explainApiError(message=''){
+  const m=(message||'').toLowerCase();
+  if(m.includes('exceeded its monthly spending')||m.includes('billing')||m.includes('quota')){
+    return 'Tu clave/proyecto de Google está sin cupo o con facturación limitada. En AI Studio suele haber gratis, pero depende del proyecto y límites. Crea una API key nueva en aistudio.google.com (Get API key) y prueba con esa clave.';
+  }
+  if(m.includes('api key not valid')||m.includes('permission denied')||m.includes('unauthenticated')){
+    return 'La API key no es válida o no tiene permisos para Gemini. Genera otra en AI Studio y reemplázala en Ajustes.';
+  }
+  return 'Error: '+message;
+}
 
 // ── Render result ──
 function renderResult(d){
