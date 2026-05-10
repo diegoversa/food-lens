@@ -144,10 +144,10 @@
     .error-bar.show{display:block}
 
     /* ── RESULTS ── */
-    .result-wrap{display:none;padding:16px 20px 0}
+    .result-wrap{display:none;padding:16px 20px 0;background:linear-gradient(180deg,#fffdf8 0%,#fff 100%);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow-sm)}
     .result-wrap.show{display:block;animation:fadeUp .4s ease both}
 
-    .result-hero-card{border-radius:var(--r);overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow)}
+    .result-hero-card{border-radius:var(--r);overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow);border:1px solid var(--border)}
     .result-hero-img{width:100%;height:180px;object-fit:cover;display:block}
     .result-hero-body{background:var(--surface);padding:16px 18px}
     .dish-name{font-family:'DM Serif Display',serif;font-size:22px;line-height:1.2;margin-bottom:5px;color:var(--text)}
@@ -185,7 +185,8 @@
     .macro-pct{font-size:10px;color:var(--muted);margin-top:2px}
 
     /* Donut */
-    .donut-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;display:flex;align-items:center;gap:20px;box-shadow:var(--shadow-sm)}
+    .donut-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;display:flex;align-items:center;gap:20px;box-shadow:var(--shadow-sm);position:relative}
+    .donut-card::before{content:'Distribución nutricional';position:absolute;top:8px;right:10px;font-size:11px;color:var(--muted)}
     .donut-svg{flex-shrink:0;transform:rotate(-90deg)}
     .donut-legend{flex:1;display:flex;flex-direction:column;gap:10px}
     .legend-row{display:flex;align-items:center;gap:8px}
@@ -694,7 +695,7 @@ async function analyze(){
   const pf=document.getElementById('progressFill');
   pf.style.animation='none';pf.offsetHeight;pf.style.animation='prog 3.5s ease forwards';
   const prompt=`Eres un nutricionista experto. Analiza la imagen y responde ÚNICAMENTE con JSON válido sin markdown ni bloques de código. Esquema exacto:
-{"nombre":"nombre del plato en español","descripcion":"descripción apetitosa en 1-2 frases","puntuacion":<1-10>,"calorias":<kcal entero>,"macros":{"proteinas":<g>,"carbohidratos":<g>,"grasas":<g>},"micronutrientes":[{"nombre":"Vitamina C","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Calcio","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Hierro","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Fibra","valor":"X g","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Sodio","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Vitamina A","valor":"X mcg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"}],"aspectos_positivos":["punto 1","punto 2","punto 3"],"aspectos_mejorar":["aspecto 1","aspecto 2"]}
+{"nombre":"nombre del plato en español","descripcion":"descripción apetitosa en 1-2 frases","puntuacion":<1-10>,"confianza":<0-100>,"dudas":["pregunta corta 1 si hay ambigüedad","pregunta corta 2 opcional"],"calorias":<kcal entero>,"macros":{"proteinas":<g>,"carbohidratos":<g>,"grasas":<g>},"micronutrientes":[{"nombre":"Vitamina C","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Calcio","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Hierro","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Fibra","valor":"X g","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Sodio","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Vitamina A","valor":"X mcg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"}],"aspectos_positivos":["punto 1","punto 2","punto 3"],"aspectos_mejorar":["aspecto 1","aspecto 2"]}
 Si no hay comida: {"error":"No se detecta comida"}`;
   try{
     let p;
@@ -705,6 +706,7 @@ Si no hay comida: {"error":"No se detecta comida"}`;
         const strictPrompt=model===modelFallbacks[0]?prompt:prompt+'\nDevuelve estrictamente un objeto JSON válido.';
         const d=await requestGemini(model,strictPrompt);
         p=parseGeminiJsonResponse(d);
+        p=await maybeClarifyAndRefine(model,p,prompt);
         break;
       }catch(err){
         const isMaxTokens=(err?.message||'').toUpperCase().includes('MAX_TOKENS');
@@ -730,6 +732,19 @@ Si no hay comida: {"error":"No se detecta comida"}`;
     } 
   }catch(e){clearInterval(iv);showErr(explainApiError(e.message));}
   finally{lw.classList.remove('show');btn.disabled=false;}
+}
+
+async function maybeClarifyAndRefine(model,parsed,basePrompt){
+  const conf=Number(parsed?.confianza||0);
+  const doubts=Array.isArray(parsed?.dudas)?parsed.dudas.filter(Boolean):[];
+  const shouldAsk=conf>0?conf<65:doubts.length>0;
+  if(!shouldAsk)return parsed;
+  const q=(doubts[0]||`Tengo dudas entre varias opciones para "${parsed?.nombre||'el plato'}". ¿Qué ingredientes principales lleva?`).slice(0,160);
+  const userInput=window.prompt(`Para mejorar la precisión:\n${q}\n\nEjemplo: \"pollo + arroz + verduras\"`);
+  if(!userInput||!userInput.trim())return parsed;
+  const refinePrompt=basePrompt+`\nContexto adicional del usuario para resolver ambigüedad: ${userInput.trim()}\nPrioriza precisión en nombre del plato, calorías y macros.`;
+  const refined=await requestGemini(model,refinePrompt);
+  return parseGeminiJsonResponse(refined);
 }
 
 function showErr(m){const e=document.getElementById('errorBar');e.textContent=m;e.classList.add('show');}
