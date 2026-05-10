@@ -883,7 +883,14 @@ function renderResult(d){
   const ct=setInterval(()=>{cur=Math.min(cur+step,target);calEl.textContent=cur.toLocaleString('es-ES');if(cur>=target)clearInterval(ct);},25);
   // Macros
   const m=d.macros||{};
-  const prot=Math.round(m.proteinas||0),carb=Math.round(m.carbohidratos||0),fat=Math.round(m.grasas||0);
+  let prot=Math.round(Number(m.proteinas)||0),carb=Math.round(Number(m.carbohidratos)||0),fat=Math.round(Number(m.grasas)||0);
+  let usedEstimate=false;
+  if(prot+carb+fat===0 && target>0){
+    prot=Math.max(1,Math.round((target*0.30)/4));
+    carb=Math.max(1,Math.round((target*0.45)/4));
+    fat=Math.max(1,Math.round((target*0.25)/9));
+    usedEstimate=true;
+  }
   const total=(prot*4)+(carb*4)+(fat*9)||1;
   const pp=Math.round(prot*4/total*100),pc=Math.round(carb*4/total*100),pf=Math.round(fat*9/total*100);
   document.getElementById('macrosSummary').innerHTML=[
@@ -892,13 +899,20 @@ function renderResult(d){
     {v:fat, n:'Grasas',cls:'fat',pct:pf}
   ].map(x=>`<div class="macro-tile ${x.cls}" onclick="toast('${x.n}: ${x.v}g · ${x.pct}% de calorías')">
     <div class="macro-val">${x.v}<span class="macro-unit">g</span></div>
-    <div class="macro-name">${x.n}</div>
+    <div class="macro-name">${x.n}${usedEstimate?'<span class="macro-unit"> · est.</span>':''}</div>
     <div class="macro-pct">${x.pct}% kcal</div>
   </div>`).join('');
   // Donut
   renderDonut(prot,carb,fat,pp,pc,pf);
   // Micronutrients
-  document.getElementById('nutrientsCard').innerHTML=(d.micronutrientes||[]).map(n=>{
+  const micros=Array.isArray(d.micronutrientes)?d.micronutrientes.filter(n=>n&&n.nombre):[];
+  const fallbackMicros=[
+    {nombre:'Vitamina C',valor:'N/D',porcentaje:0,nivel:'bajo'},
+    {nombre:'Calcio',valor:'N/D',porcentaje:0,nivel:'bajo'},
+    {nombre:'Hierro',valor:'N/D',porcentaje:0,nivel:'bajo'}
+  ];
+  const showMicros=micros.length?micros:fallbackMicros;
+  document.getElementById('nutrientsCard').innerHTML=showMicros.map(n=>{
     const pct=Math.min(100,Math.max(0,n.porcentaje||0));
     const emoji=EMOJIS[n.nombre]||'💊';
     return `<div class="nutrient-row" onclick="toast('${n.nombre}: ${n.valor} · ${pct}% del valor diario recomendado')">
