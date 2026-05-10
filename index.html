@@ -790,6 +790,29 @@ function escapeControlCharsInJsonStrings(raw){
   return out;
 }
 
+function repairLikelyTruncatedJson(raw){
+  let fixed=escapeControlCharsInJsonStrings(raw).trim();
+  let inString=false,escape=false,depth=0;
+  for(let i=0;i<fixed.length;i++){
+    const ch=fixed[i];
+    if(inString){
+      if(escape){escape=false;continue;}
+      if(ch==='\\'){escape=true;continue;}
+      if(ch==='"'){inString=false;}
+      continue;
+    }
+    if(ch==='"'){inString=true;continue;}
+    if(ch==='{')depth++;
+    if(ch==='}')depth=Math.max(0,depth-1);
+  }
+  if(inString){
+    fixed+='..."';
+  }
+  fixed=fixed.replace(/,\s*$/,'');
+  while(depth>0){fixed+='}';depth--;}
+  return fixed;
+}
+
 function parseGeminiJsonResponse(d){
   const parts=d?.candidates?.[0]?.content?.parts||[];
   const text=parts.map(x=>x?.text).filter(Boolean).join('\n').trim();
@@ -811,7 +834,11 @@ function parseGeminiJsonResponse(d){
     try{
       return JSON.parse(escapeControlCharsInJsonStrings(candidate));
     }catch{
-      throw new Error(`JSON inválido en respuesta de Gemini: ${clean.slice(0,140)}`);
+      try{
+        return JSON.parse(repairLikelyTruncatedJson(candidate));
+      }catch{
+        throw new Error(`JSON inválido en respuesta de Gemini: ${clean.slice(0,140)}`);
+      }
     }
   }
 }
