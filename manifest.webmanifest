@@ -1,0 +1,11 @@
+{
+  "name": "FoodLens",
+  "short_name": "FoodLens",
+  "description": "Análisis nutricional con IA",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1a3a0a",
+  "theme_color": "#1a3a0a",
+  "orientation": "portrait"
+}
