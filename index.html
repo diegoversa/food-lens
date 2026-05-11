@@ -30,6 +30,9 @@
       --shadow:0 4px 16px rgba(0,0,0,0.10);
       --shadow-lg:0 8px 32px rgba(0,0,0,0.14);
     }
+    body.dark{
+      --bg:#141414;--surface:#1f1f1f;--surface2:#262626;--text:#f3f3f3;--text2:#d0d0d0;--muted:#9d9d9d;--border:#3a3a3a;
+    }
     html,body{min-height:100%;width:100%;background:var(--cream);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
     #app{width:100%;max-width:100%;margin:0;background:var(--cream);min-height:100vh;position:relative;overflow:hidden}
 
@@ -870,49 +873,27 @@
       color:var(--ink);margin-bottom:6px;letter-spacing:-.3px
     }
     .empty-state p{font-size:14px;color:var(--muted);line-height:1.6;font-weight:300}
+    .clear-btn{width:100%;padding:12px;background:none;border:1px solid var(--coral-border);color:var(--coral);border-radius:var(--r-sm);font-size:13px;font-weight:500;font-family:'Sora',sans-serif;cursor:pointer;margin-top:12px;transition:background .2s}
+    .clear-btn:hover{background:var(--coral-light)}
+    .sec-btn{width:100%;padding:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:var(--r-sm);font-size:13px;font-weight:500;font-family:'Sora',sans-serif;cursor:pointer;margin-top:8px}
 
-    .clear-btn{
-      width:100%;padding:13px;background:none;
-      border:1px solid var(--terra-line);color:var(--terra);
-      border-radius:var(--r-sm);font-size:13px;font-weight:500;
-      font-family:'Inter Tight',sans-serif;cursor:pointer;
-      margin-top:14px;transition:all .2s;letter-spacing:.2px
-    }
-    .clear-btn:hover{background:var(--terra-soft)}
-
-    /* ═══════════════ SETTINGS ═══════════════ */
-    #settings{padding-bottom:100px;overflow-y:auto}
-    .settings-body{padding:18px 22px}
-    .settings-group{margin-bottom:22px}
-    .settings-group-label{
-      font-size:11px;font-weight:700;color:var(--muted);
-      text-transform:uppercase;letter-spacing:1.5px;
-      margin-bottom:10px;padding:0 4px
-    }
-    .settings-card{
-      background:var(--surface);border:1px solid var(--line-2);
-      border-radius:var(--r-sm);overflow:hidden;box-shadow:var(--sh-1)
-    }
-    .settings-row{
-      display:flex;align-items:center;gap:14px;padding:15px 16px;
-      cursor:pointer;transition:background .15s;position:relative
-    }
-    .settings-row:not(:last-child)::after{
-      content:'';position:absolute;bottom:0;left:16px;right:16px;
-      height:.5px;background:var(--line-2)
-    }
-    .settings-row:hover{background:var(--paper-2)}
-    .settings-row.no-action{cursor:default}
-    .settings-row.no-action:hover{background:transparent}
-    .row-icon{
-      width:38px;height:38px;border-radius:11px;
-      display:flex;align-items:center;justify-content:center;flex-shrink:0
-    }
-    .row-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-    .row-icon.green{background:var(--moss-soft);color:var(--moss-deep)}
-    .row-icon.blue{background:var(--slate-soft);color:var(--slate)}
-    .row-icon.coral{background:var(--terra-soft);color:var(--terra)}
-    .row-icon.purple{background:var(--plum-soft);color:var(--plum)}
+    /* ── SETTINGS SCREEN ── */
+    #settings{padding-bottom:90px;overflow-y:auto}
+    .settings-body{padding:16px 20px}
+    .settings-group{margin-bottom:20px}
+    .settings-group-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;padding:0 4px}
+    .settings-row{background:var(--surface);display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background .15s;position:relative}
+    .settings-row:not(:last-child)::after{content:'';position:absolute;bottom:0;left:16px;right:16px;height:.5px;background:var(--border)}
+    .settings-row:first-child{border-radius:var(--r-sm) var(--r-sm) 0 0;border-top:1px solid var(--border);border-left:1px solid var(--border);border-right:1px solid var(--border)}
+    .settings-row:last-child{border-radius:0 0 var(--r-sm) var(--r-sm);border-bottom:1px solid var(--border);border-left:1px solid var(--border);border-right:1px solid var(--border)}
+    .settings-row:only-child{border-radius:var(--r-sm);border:1px solid var(--border)}
+    .settings-row:hover{background:var(--surface2)}
+    .row-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .row-icon svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .row-icon.green{background:var(--sage-light);color:var(--sage)}
+    .row-icon.blue{background:var(--blue-light);color:var(--blue)}
+    .row-icon.coral{background:var(--coral-light);color:var(--coral)}
+    .row-icon.purple{background:var(--purple-light);color:var(--purple)}
     .row-text{flex:1}
     .row-title{font-size:14px;font-weight:500;color:var(--ink);letter-spacing:-.1px}
     .row-sub{font-size:12px;color:var(--muted);margin-top:2px;font-weight:400}
@@ -1270,6 +1251,7 @@
     <div class="history-section-title" id="histSectionLabel" style="display:none">Recientes</div>
     <div class="history-list" id="histList"></div>
     <button class="clear-btn" id="clearBtn" onclick="clearHistory()" style="display:none">Borrar historial</button>
+    <button class="sec-btn" id="exportCsvBtn" onclick="exportHistoryCSV()" style="display:none">Exportar CSV</button>
   </div>
   <nav class="bottom-nav">
     <button class="nav-item" onclick="goMain()">
@@ -1328,6 +1310,13 @@
         </div>
       </div>
     </div>
+    <div class="settings-group">
+      <div class="settings-group-label">Apariencia</div>
+      <div class="settings-row" onclick="toggleDarkMode()">
+        <div class="row-icon blue"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg></div>
+        <div class="row-text"><div class="row-title">Modo oscuro</div><div class="row-sub" id="darkModeStatus">Desactivado</div></div>
+      </div>
+    </div>
   </div>
   <nav class="bottom-nav">
     <button class="nav-item" onclick="goMain()">
@@ -1353,11 +1342,13 @@ const EMOJIS={'Vitamina C':'🍊','Calcio':'🦴','Hierro':'🩸','Fibra':'🌾'
 let apiKey=localStorage.getItem('fl_key')||'';
 let b64='',mime='image/jpeg';
 let lastResult=null;
+let darkMode=localStorage.getItem('fl_dark')==='1';
 let hist=JSON.parse(localStorage.getItem('fl_hist')||'[]');
 let curTab='micros';
 
 // ── Boot ──
 updateUI();
+document.body.classList.toggle('dark',darkMode);
 document.getElementById('portionSlider').addEventListener('input',()=>{if(lastResult)renderResult(lastResult);});
 setTimeout(()=>showScreen(apiKey?'main':'setup'),1800);
 if('serviceWorker' in navigator){
@@ -1512,6 +1503,7 @@ function editKey(){
 // ── Analyze ──
 async function analyze(){
   if(!b64)return;
+  if(navigator.vibrate)navigator.vibrate(12);
   if(!apiKey){toast('Configura tu API key en Ajustes');goSettings();return;}
   const btn=document.getElementById('analyzeBtn');
   const lw=document.getElementById('loadingWrap');
@@ -1871,14 +1863,31 @@ function renderHistory(){
     return `<div class="history-card">${thumb}<div class="history-info"><div class="history-name">${h.nombre}</div><div class="history-meta">${h.date}</div></div><div class="history-right"><div class="history-cals">${h.calorias} kcal</div><div class="history-score ${cls}">${h.puntuacion}</div></div></div>`;
   }).join('');
 }
-function clearHistory(){if(!hist.length){toast('No hay nada que borrar');return;}if(!confirm('¿Borrar todo el historial?'))return;hist=[];localStorage.removeItem('fl_hist');renderHistory();updateUI();toast('Historial borrado');}
+function clearHistory(){if(!confirm('¿Borrar todo el historial?'))return;hist=[];localStorage.removeItem('fl_hist');renderHistory();updateUI();toast('Historial borrado');}
+function exportHistoryCSV(){
+  if(!hist.length){toast('No hay historial para exportar');return;}
+  const rows=[['fecha','plato','calorias','puntuacion','proteinas','carbohidratos','grasas']];
+  hist.forEach(h=>rows.push([h.date,h.nombre,h.calorias,h.puntuacion,h.macros?.proteinas||0,h.macros?.carbohidratos||0,h.macros?.grasas||0]));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='foodlens-historial.csv';a.click();
+  URL.revokeObjectURL(a.href);
+}
+function toggleDarkMode(){
+  darkMode=!darkMode;
+  localStorage.setItem('fl_dark',darkMode?'1':'0');
+  document.body.classList.toggle('dark',darkMode);
+  updateUI();
+}
 
 // ── UI helpers ──
 function updateUI(){
   document.getElementById('keyStatus').textContent=apiKey?'Configurada ✓':'No configurada';
   document.getElementById('histCount').textContent=hist.length+' análisis';
+  const dm=document.getElementById('darkModeStatus'); if(dm)dm.textContent=darkMode?'Activado':'Desactivado';
   const badge=document.getElementById('histBadge');
   if(hist.length>0){badge.textContent=hist.length>9?'9+':hist.length;badge.classList.add('show');}else{badge.classList.remove('show');}
+  const ex=document.getElementById('exportCsvBtn'); if(ex)ex.style.display=hist.length?'block':'none';
 }
 
 // ── Toast ──
