@@ -1362,7 +1362,14 @@ document.getElementById('portionSlider').addEventListener('input',()=>{if(lastRe
 setTimeout(()=>showScreen(apiKey?'main':'setup'),1800);
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js').then(()=>{
+      const sendParams=()=>{
+        if(!navigator.serviceWorker.controller)return;
+        navigator.serviceWorker.controller.postMessage({type:'SAVE_PARAMS',params:window.location.search||''});
+      };
+      sendParams();
+      window.addEventListener('popstate',sendParams);
+    }).catch(()=>{});
   });
 }
 
