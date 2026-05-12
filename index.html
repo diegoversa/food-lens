@@ -144,7 +144,8 @@ html,body{min-height:100%;width:100%;background:var(--paper);font-family:'Inter 
 
 /* ── FAB ── */
 #main{padding-bottom:100px;overflow-y:auto}
-.fab-zone{display:flex;flex-direction:column;align-items:center;padding:28px 22px 0;gap:18px}
+.fab-zone{display:flex;flex-direction:column;align-items:center;padding:28px 22px 0;gap:14px}
+.fab-hint{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.3px}
 .fab-wrap{position:relative;width:80px;height:80px}
 .fab-ring{position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(31,93,44,.22);animation:fabRing 2s ease-out infinite;pointer-events:none}
 .fab-ring:nth-child(2){animation-delay:.7s}
@@ -175,6 +176,45 @@ html,body{min-height:100%;width:100%;background:var(--paper);font-family:'Inter 
 .ration-val{font-family:'Fraunces',serif;font-size:20px;font-weight:500;color:var(--amber)}
 .ration-sub{font-size:10px;color:var(--muted)}
 input[type=range].ration-slider{width:100%;accent-color:var(--moss);height:4px;border-radius:2px;cursor:pointer}
+
+/* ── MANUAL SEARCH ── */
+.manual-wrap{margin:14px 22px 0}
+.manual-row{display:flex;gap:8px}
+.manual-input{
+  flex:1;padding:13px 16px;border:1.5px solid var(--line);border-radius:var(--r-sm);
+  font-size:14px;font-family:'Inter Tight',sans-serif;background:var(--surface);
+  color:var(--ink);outline:none;transition:all .2s
+}
+.manual-input:focus{border-color:var(--moss);box-shadow:0 0 0 3px rgba(31,93,44,.08)}
+.manual-btn{
+  padding:13px 16px;background:var(--surface);border:1.5px solid var(--line);
+  border-radius:var(--r-sm);cursor:pointer;transition:all .2s;display:flex;
+  align-items:center;gap:6px;font-size:13px;font-weight:600;
+  font-family:'Inter Tight',sans-serif;color:var(--ink-2);white-space:nowrap
+}
+.manual-btn:hover{border-color:var(--moss);color:var(--moss)}
+.manual-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.manual-btn.voice{background:var(--terra-soft);border-color:var(--terra-line);color:var(--terra)}
+.manual-btn.voice.listening{animation:voicePulse .6s ease-in-out infinite alternate}
+@keyframes voicePulse{from{background:var(--terra-soft)}to{background:var(--terra-line)}}
+
+/* ── COPY MACROS ── */
+.copy-macros-btn{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  width:100%;padding:11px;background:none;
+  border:1px solid var(--line-2);border-radius:var(--r-xs);
+  font-size:12px;font-weight:500;font-family:'Inter Tight',sans-serif;
+  color:var(--muted);cursor:pointer;transition:all .2s;margin-top:10px;margin-bottom:14px
+}
+.copy-macros-btn:hover{border-color:var(--moss-line);color:var(--moss);background:var(--moss-soft)}
+.copy-macros-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── RATION ESTIMATE ── */
+.ration-estimate{
+  font-size:11px;color:var(--muted);margin-top:8px;
+  display:flex;align-items:center;gap:5px;font-weight:400
+}
+.ration-estimate svg{width:12px;height:12px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 
 /* ── ANALYZE BTN ── */
 .analyze-wrap{padding:14px 22px 0}
@@ -562,6 +602,20 @@ input[type=range].ration-slider{width:100%;accent-color:var(--moss);height:4px;b
     <button class="daily-banner-reset" onclick="resetDaily()">Reset</button>
   </div>
 
+  <!-- búsqueda manual -->
+  <div class="manual-wrap">
+    <div class="manual-row">
+      <input class="manual-input" id="manualInput" type="text" placeholder="Ej: 200g arroz blanco cocido…" autocomplete="off" onkeydown="if(event.key==='Enter')searchManual()">
+      <button class="manual-btn voice" id="voiceBtn" onclick="toggleVoice()" title="Voz">
+        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+      <button class="manual-btn" onclick="searchManual()">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Buscar
+      </button>
+    </div>
+  </div>
+
   <!-- FAB -->
   <div class="fab-zone">
     <div class="fab-preview" id="fabPreview">
@@ -573,21 +627,11 @@ input[type=range].ration-slider{width:100%;accent-color:var(--moss);height:4px;b
     </div>
     <div class="fab-wrap" id="fabWrap">
       <div class="fab-ring"></div><div class="fab-ring"></div>
-      <button class="fab-btn" onclick="openCamera()">
+      <button class="fab-btn" onclick="openSheet()">
         <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
       </button>
     </div>
-    <div class="fab-sub-row">
-      <div class="fab-sub" onclick="openCamera()">
-        <div class="fab-sub-btn"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
-        <div class="fab-sub-label">Cámara</div>
-      </div>
-      <div class="fab-divider"></div>
-      <div class="fab-sub" onclick="openGallery()">
-        <div class="fab-sub-btn"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-        <div class="fab-sub-label">Galería</div>
-      </div>
-    </div>
+    <div class="fab-hint">Toca para añadir foto</div>
   </div>
 
   <!-- ration slider -->
@@ -600,6 +644,10 @@ input[type=range].ration-slider{width:100%;accent-color:var(--moss);height:4px;b
       <div class="ration-val" id="rationCalDisplay">—</div>
     </div>
     <input type="range" class="ration-slider" id="rationSlider" min="10" max="200" value="100" step="5" oninput="updateRation(this.value)">
+    <div class="ration-estimate" id="rationEstimate" style="display:none">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="rationEstimateText"></span>
+    </div>
   </div>
 
   <div class="analyze-wrap">
@@ -647,6 +695,10 @@ input[type=range].ration-slider{width:100%;accent-color:var(--moss);height:4px;b
       <div class="cal-icon"><svg viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8a8 8 0 0 0 16 0c0-3.32-2.67-7.25-8-11.8z"/></svg></div>
     </div>
     <div class="macros-summary" id="macrosSummary"></div>
+    <button class="copy-macros-btn" onclick="copyMacros()">
+      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copiar macros
+    </button>
     <div class="donut-card">
       <svg class="donut-svg" id="donutSvg" width="118" height="118" viewBox="0 0 118 118"></svg>
       <div class="donut-legend" id="donutLegend"></div>
@@ -665,7 +717,7 @@ input[type=range].ration-slider{width:100%;accent-color:var(--moss);height:4px;b
     <button class="nav-item active" id="navMain" onclick="goMain()">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Inicio
     </button>
-    <button class="nav-item nav-cam-btn" onclick="openCamera()"><div class="nav-cam-inner"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div></button>
+    <button class="nav-item nav-cam-btn" onclick="openSheet()"><div class="nav-cam-inner"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div></button>
     <button class="nav-item" onclick="goHistory()">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historial
       <div class="nav-badge" id="histBadge"></div>
@@ -695,7 +747,7 @@ input[type=range].ration-slider{width:100%;accent-color:var(--moss);height:4px;b
   </div>
   <nav class="bottom-nav">
     <button class="nav-item" onclick="goMain()"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Inicio</button>
-    <button class="nav-item nav-cam-btn" onclick="goMain();setTimeout(openCamera,300)"><div class="nav-cam-inner"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div></button>
+    <button class="nav-item nav-cam-btn" onclick="goMain();setTimeout(openSheet,300)"><div class="nav-cam-inner"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div></button>
     <button class="nav-item active" onclick="goHistory()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historial</button>
   </nav>
 </div>
@@ -740,7 +792,7 @@ input[type=range].ration-slider{width:100%;accent-color:var(--moss);height:4px;b
   </div>
   <nav class="bottom-nav">
     <button class="nav-item" onclick="goMain()"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Inicio</button>
-    <button class="nav-item nav-cam-btn" onclick="goMain();setTimeout(openCamera,300)"><div class="nav-cam-inner"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div></button>
+    <button class="nav-item nav-cam-btn" onclick="goMain();setTimeout(openSheet,300)"><div class="nav-cam-inner"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div></button>
     <button class="nav-item active" onclick="goProfile()"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Perfil</button>
   </nav>
 </div>
@@ -796,29 +848,47 @@ input[type=range].ration-slider{width:100%;accent-color:var(--moss);height:4px;b
   </div>
   <nav class="bottom-nav">
     <button class="nav-item" onclick="goMain()"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Inicio</button>
-    <button class="nav-item nav-cam-btn" onclick="goMain();setTimeout(openCamera,300)"><div class="nav-cam-inner"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div></button>
+    <button class="nav-item nav-cam-btn" onclick="goMain();setTimeout(openSheet,300)"><div class="nav-cam-inner"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div></button>
     <button class="nav-item" onclick="goHistory()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historial</button>
   </nav>
 </div>
 
 </div><!-- #app -->
 <script>
-/* ─── STATE ─── */
+/* ─── STORAGE (PWA-safe: localStorage + cookie fallback for iOS standalone) ─── */
+function store(k,v){
+  try{store(k,v);}catch(e){}
+  // cookie fallback - iOS standalone sometimes isolates localStorage
+  try{document.cookie=`${k}=${encodeURIComponent(v)};path=/;max-age=31536000;SameSite=Lax`;}catch(e){}
+}
+function retrieve(k){
+  try{const v=localStorage.getItem(k);if(v!==null)return v;}catch(e){}
+  // try cookie
+  try{
+    const m=document.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)'));
+    if(m)return decodeURIComponent(m[1]);
+  }catch(e){}
+  return null;
+}
+function forget(k){
+  try{forget(k);}catch(e){}
+  try{document.cookie=`${k}=;path=/;max-age=0`;}catch(e){}
+}
 const EMOJIS={'Vitamina C':'🍊','Calcio':'🦴','Hierro':'🩸','Fibra':'🌾','Sodio':'🧂','Vitamina A':'🥕','Vitamina D':'☀️','Vitamina B12':'💊','Potasio':'🍌','Zinc':'⚡','Magnesio':'💚','Vitamina E':'🌻'};
-let apiKey=localStorage.getItem('fl_key')||'';
+let apiKey=retrieve('fl_key')||'';
 let b64='',mime='image/jpeg';
-let hist=JSON.parse(localStorage.getItem('fl_hist')||'[]');
-let profile=JSON.parse(localStorage.getItem('fl_profile')||'{}');
-let daily=JSON.parse(localStorage.getItem('fl_daily')||'{"date":"","cal":0,"prot":0}');
+let hist=JSON.parse(retrieve('fl_hist')||'[]');
+let profile=JSON.parse(retrieve('fl_profile')||'{}');
+let daily=JSON.parse(retrieve('fl_daily')||'{"date":"","cal":0,"prot":0}');
 let lastResult=null;
 let rationPct=100;
 
 /* ─── BOOT ─── */
-applyDark(localStorage.getItem('fl_dark')==='1');
+applyDark(retrieve('fl_dark')==='1');
 updateUI();
 resetDailyIfNewDay();
 setTimeout(()=>{
-  const seen=localStorage.getItem('fl_ob_done');
+  const seen=retrieve('fl_ob_done');
   if(seen&&apiKey){showScreen('main');}
   else if(seen&&!apiKey){showScreen('onboarding');obGo(2);}
   else{showScreen('onboarding');obGo(0);}
@@ -847,9 +917,9 @@ function obGo(n){
   else{lbl.textContent='Siguiente';btn.classList.remove('start');skip.style.display='block';}
   if(obCur===2&&apiKey)obShowKeyOk();
 }
-function obNext(){if(obCur<2){obGo(obCur+1);return;}if(!apiKey){toast('Introduce tu API key para continuar');return;}localStorage.setItem('fl_ob_done','1');showScreen('main');}
-function obSkip(){localStorage.setItem('fl_ob_done','1');if(!apiKey){obGo(2);return;}showScreen('main');}
-function obSaveKey(){const v=document.getElementById('obKeyInput').value.trim();if(!v.startsWith('AIza')){toast('Debe empezar por AIza…');return;}apiKey=v;localStorage.setItem('fl_key',v);obShowKeyOk();updateUI();toast('✓ API key guardada');}
+function obNext(){if(obCur<2){obGo(obCur+1);return;}if(!apiKey){toast('Introduce tu API key para continuar');return;}store('fl_ob_done','1');showScreen('main');}
+function obSkip(){store('fl_ob_done','1');if(!apiKey){obGo(2);return;}showScreen('main');}
+function obSaveKey(){const v=document.getElementById('obKeyInput').value.trim();if(!v.startsWith('AIza')){toast('Debe empezar por AIza…');return;}apiKey=v;store('fl_key',v);obShowKeyOk();updateUI();toast('✓ API key guardada');}
 function obShowKeyOk(){document.getElementById('obKeyRow').style.display='none';document.getElementById('obKeyOk').style.display='flex';}
 let obTouchX=0;
 document.getElementById('onboarding').addEventListener('touchstart',e=>{obTouchX=e.touches[0].clientX;},{passive:true});
@@ -876,6 +946,7 @@ function handleFile(file){
     document.getElementById('errorBar').classList.remove('show');
     document.getElementById('rationWrap').classList.remove('show');
     rationPct=100;document.getElementById('rationSlider').value=100;
+    haptic('medium');
   };
   r.readAsDataURL(file);
 }
@@ -883,16 +954,16 @@ document.getElementById('inputCamera').addEventListener('change',e=>handleFile(e
 document.getElementById('inputGallery').addEventListener('change',e=>handleFile(e.target.files[0]));
 
 /* ─── API KEY ─── */
-function editKey(){const v=prompt('Nueva API key (AIza…):');if(!v)return;if(!v.startsWith('AIza')){toast('Debe empezar por AIza…');return;}apiKey=v;localStorage.setItem('fl_key',v);updateUI();toast('✓ API key actualizada');}
+function editKey(){const v=prompt('Nueva API key (AIza…):');if(!v)return;if(!v.startsWith('AIza')){toast('Debe empezar por AIza…');return;}apiKey=v;store('fl_key',v);updateUI();toast('✓ API key actualizada');}
 
 /* ─── DARK MODE ─── */
 function applyDark(on){document.getElementById('app').classList.toggle('dark',on);const b=document.getElementById('darkToggleBtn');if(b)b.classList.toggle('active-dark',on);const t=document.getElementById('darkToggle');if(t)t.classList.toggle('on',on);}
-function toggleDark(){const on=!document.getElementById('app').classList.contains('dark');localStorage.setItem('fl_dark',on?'1':'0');applyDark(on);}
+function toggleDark(){const on=!document.getElementById('app').classList.contains('dark');store('fl_dark',on?'1':'0');applyDark(on);}
 
 /* ─── DAILY GOALS ─── */
 function resetDailyIfNewDay(){
   const today=new Date().toDateString();
-  if(daily.date!==today){daily={date:today,cal:0,prot:0};localStorage.setItem('fl_daily',JSON.stringify(daily));}
+  if(daily.date!==today){daily={date:today,cal:0,prot:0};store('fl_daily',JSON.stringify(daily));}
 }
 function updateDailyBanner(){
   resetDailyIfNewDay();
@@ -904,7 +975,7 @@ function updateDailyBanner(){
   if(goalProt){pi.style.width=Math.min(100,daily.prot/goalProt*100)+'%';pv.textContent=`${Math.round(daily.prot)}g / ${goalProt}g`;}
   else{pi.style.width='0%';pv.textContent=`${Math.round(daily.prot)}g / —`;}
 }
-function resetDaily(){if(!confirm('¿Reiniciar los totales de hoy?'))return;daily.cal=0;daily.prot=0;localStorage.setItem('fl_daily',JSON.stringify(daily));updateDailyBanner();toast('Totales reiniciados');}
+function resetDaily(){if(!confirm('¿Reiniciar los totales de hoy?'))return;daily.cal=0;daily.prot=0;store('fl_daily',JSON.stringify(daily));updateDailyBanner();toast('Totales reiniciados');}
 
 /* ─── RATION SLIDER ─── */
 function updateRation(v){
@@ -930,7 +1001,7 @@ async function analyze(){
   if(!b64)return;
   if(!apiKey){toast('Configura tu API key');goSettings();return;}
   const btn=document.getElementById('analyzeBtn');const lw=document.getElementById('loadingWrap');
-  btn.disabled=true;lw.classList.add('show');
+  btn.disabled=true;lw.classList.add('show');haptic('light');
   document.getElementById('resultWrap').classList.remove('show');
   document.getElementById('errorBar').classList.remove('show');
   document.getElementById('rationWrap').classList.remove('show');
@@ -940,7 +1011,7 @@ async function analyze(){
 
   const dietCtx=profile.diets?.length?`El usuario sigue estas restricciones dietéticas: ${profile.diets.join(', ')}. Tenlo en cuenta en los aspectos a mejorar.`:'';
   const prompt=`Eres un nutricionista experto. Analiza la imagen y responde ÚNICAMENTE con JSON válido sin markdown.${dietCtx?'\n'+dietCtx:''}
-{"nombre":"nombre del plato","descripcion":"descripción apetitosa 1-2 frases","puntuacion":<1-10>,"confianza":<0-100>,"calorias":<kcal>,"macros":{"proteinas":<g>,"carbohidratos":<g>,"grasas":<g>},"micronutrientes":[{"nombre":"Vitamina C","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Calcio","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Hierro","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Fibra","valor":"X g","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Sodio","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Vitamina A","valor":"X mcg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"}],"aspectos_positivos":["punto 1","punto 2","punto 3"],"aspectos_mejorar":["aspecto 1","aspecto 2"]}
+{"nombre":"nombre del plato","descripcion":"descripción apetitosa 1-2 frases","puntuacion":<1-10>,"confianza":<0-100>,"porcion_estimada":"descripción del tamaño estimado de la ración, ej: ración individual ~350g, plato compartido ~600g, media ración, etc.","calorias":<kcal para la ración visible>,"macros":{"proteinas":<g>,"carbohidratos":<g>,"grasas":<g>},"micronutrientes":[{"nombre":"Vitamina C","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Calcio","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Hierro","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Fibra","valor":"X g","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Sodio","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Vitamina A","valor":"X mcg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"}],"aspectos_positivos":["punto 1","punto 2","punto 3"],"aspectos_mejorar":["aspecto 1","aspecto 2"]}
 Si no hay comida: {"error":"No se detecta comida"}`;
 
   try{
@@ -1041,7 +1112,15 @@ function renderResult(d){
 
   switchTab('micros');
   document.getElementById('rationWrap').classList.add('show');
+  // show portion estimate if available
+  const estEl=document.getElementById('rationEstimate');
+  const estTxt=document.getElementById('rationEstimateText');
+  if(d.porcion_estimada&&!d._manual){
+    estTxt.textContent='Ración estimada: '+d.porcion_estimada;
+    estEl.style.display='flex';
+  } else {estEl.style.display='none';}
   document.getElementById('resultWrap').classList.add('show');
+  haptic(score>=7?'medium':'light');
   setTimeout(()=>document.querySelectorAll('[data-t]').forEach(el=>el.style.width=el.dataset.t+'%'),200);
   document.getElementById('resultWrap').scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -1113,12 +1192,12 @@ function saveHist(d){
   const imgSrc=document.getElementById('heroImg')?.src||'';
   hist.unshift({id:Date.now(),nombre:d.nombre,calorias:Math.round((d.calorias||0)*(rationPct/100)),puntuacion:d.puntuacion,macros:d.macros,img:imgSrc.substring(0,300),date:new Date().toLocaleDateString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})});
   if(hist.length>50)hist=hist.slice(0,50);
-  localStorage.setItem('fl_hist',JSON.stringify(hist));
+  store('fl_hist',JSON.stringify(hist));
   // add to daily
   resetDailyIfNewDay();
   daily.cal+=Math.round((d.calorias||0)*(rationPct/100));
   daily.prot+=Math.round((d.macros?.proteinas||0)*(rationPct/100));
-  localStorage.setItem('fl_daily',JSON.stringify(daily));
+  store('fl_daily',JSON.stringify(daily));
   updateDailyBanner();updateUI();
 }
 
@@ -1170,7 +1249,7 @@ function renderWeekChart(){
   });
 }
 
-function clearHistory(){if(!hist.length){toast('Nada que borrar');return;}if(!confirm('¿Borrar todo el historial?'))return;hist=[];localStorage.removeItem('fl_hist');renderHistory();updateUI();toast('Historial borrado');}
+function clearHistory(){if(!hist.length){toast('Nada que borrar');return;}if(!confirm('¿Borrar todo el historial?'))return;hist=[];forget('fl_hist');renderHistory();updateUI();toast('Historial borrado');}
 
 function exportCSV(){
   if(!hist.length){toast('Sin datos para exportar');return;}
@@ -1225,7 +1304,7 @@ function saveProfile(){
     diets:[...document.querySelectorAll('.diet-pill.active')].map(p=>p.dataset.diet),
     goalCal:res.tdee||0,goalProt:res.prot||0
   };
-  localStorage.setItem('fl_profile',JSON.stringify(profile));
+  store('fl_profile',JSON.stringify(profile));
   toast('✓ Perfil guardado');goMain();
 }
 
@@ -1234,7 +1313,108 @@ function updateUI(){
   const el=document.getElementById('keyStatus');if(el)el.textContent=apiKey?'Configurada ✓':'No configurada';
   const hc=document.getElementById('histCount');if(hc)hc.textContent=hist.length+' análisis';
   const badge=document.getElementById('histBadge');if(badge){badge.textContent=hist.length>9?'9+':hist.length;badge.classList.toggle('show',hist.length>0);}
-  applyDark(localStorage.getItem('fl_dark')==='1');
+  applyDark(retrieve('fl_dark')==='1');
+}
+
+/* ─── HAPTICS ─── */
+function haptic(type='light'){
+  if(navigator.vibrate){navigator.vibrate(type==='heavy'?[10,30,10]:type==='medium'?12:6);return;}
+  // AudioContext trick for iOS
+  try{
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator();const g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);
+    o.frequency.value=type==='heavy'?200:type==='medium'?300:400;
+    g.gain.setValueAtTime(.001,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.05);
+    o.start();o.stop(ac.currentTime+.05);
+    setTimeout(()=>ac.close(),100);
+  }catch(e){}
+}
+
+/* ─── VOICE INPUT ─── */
+let recognition=null;let isListening=false;
+function toggleVoice(){
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRecognition){toast('Tu navegador no soporta reconocimiento de voz');return;}
+  if(isListening){recognition?.stop();return;}
+  recognition=new SpeechRecognition();
+  recognition.lang='es-ES';recognition.interimResults=false;recognition.maxAlternatives=1;
+  recognition.onstart=()=>{
+    isListening=true;haptic('medium');
+    document.getElementById('voiceBtn').classList.add('listening');
+    toast('Escuchando… habla ahora');
+  };
+  recognition.onresult=e=>{
+    const txt=e.results[0][0].transcript;
+    document.getElementById('manualInput').value=txt;
+    haptic('light');
+    toast('✓ "'+txt+'"');
+    setTimeout(()=>searchManual(),300);
+  };
+  recognition.onerror=e=>{toast('Error de voz: '+e.error);};
+  recognition.onend=()=>{
+    isListening=false;
+    document.getElementById('voiceBtn').classList.remove('listening');
+  };
+  recognition.start();
+}
+
+/* ─── MANUAL FOOD SEARCH ─── */
+async function searchManual(){
+  const q=document.getElementById('manualInput').value.trim();
+  if(!q){toast('Escribe un alimento primero');return;}
+  if(!apiKey){toast('Configura tu API key');goSettings();return;}
+  haptic('light');
+  const btn=document.querySelector('.manual-btn:not(.voice)');
+  const origText=btn.innerHTML;
+  btn.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" style="animation:spin 1s linear infinite"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg> Buscando…';
+  btn.disabled=true;
+  const prompt=`Eres nutricionista. El usuario ha escrito: "${q}". Interpreta el alimento/plato y responde ÚNICAMENTE con JSON:
+{"nombre":"nombre del plato/alimento","descripcion":"descripción corta","puntuacion":<1-10>,"confianza":90,"calorias":<kcal>,"macros":{"proteinas":<g>,"carbohidratos":<g>,"grasas":<g>},"micronutrientes":[{"nombre":"Vitamina C","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Calcio","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Hierro","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Fibra","valor":"X g","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Sodio","valor":"X mg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"},{"nombre":"Vitamina A","valor":"X mcg","porcentaje":<0-100>,"nivel":"bajo|medio|alto"}],"aspectos_positivos":["punto 1","punto 2"],"aspectos_mejorar":["aspecto 1"]}
+Si no reconoces el alimento: {"error":"No reconozco ese alimento"}`;
+  try{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:2048}})
+    });
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${res.status}`);}
+    const data=await res.json();
+    const p=parseGeminiJson(data);
+    if(p.error){showErr(p.error);}
+    else{
+      // use a placeholder img
+      b64='';
+      document.getElementById('fabPreview').classList.remove('show');
+      document.getElementById('fabWrap').style.display='none';
+      document.getElementById('heroImg').src='';
+      // mark as manual for result display
+      p._manual=true;p._query=q;
+      rationPct=100;document.getElementById('rationSlider').value=100;
+      lastResult=p;renderResult(p);saveHist(p);
+      document.getElementById('manualInput').value='';
+      haptic('medium');
+    }
+  }catch(e){showErr(explainErr(e.message));}
+  finally{btn.innerHTML=origText;btn.disabled=false;}
+}
+
+/* ─── COPY MACROS ─── */
+function copyMacros(){
+  if(!lastResult)return;
+  const factor=rationPct/100;
+  const m=lastResult.macros||{};
+  const cal=Math.round((lastResult.calorias||0)*factor);
+  const prot=Math.round((m.proteinas||0)*factor);
+  const carb=Math.round((m.carbohidratos||0)*factor);
+  const fat=Math.round((m.grasas||0)*factor);
+  const txt=`${lastResult.nombre||'Plato'} (${rationPct}%)\n🔥 ${cal} kcal\n💪 ${prot}g proteína\n🌾 ${carb}g carbos\n🥑 ${fat}g grasas`;
+  navigator.clipboard?.writeText(txt).then(()=>{haptic('light');toast('Macros copiados al portapapeles');}).catch(()=>{
+    // fallback
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    haptic('light');toast('Macros copiados');
+  });
 }
 
 /* ─── TOAST ─── */
