@@ -359,7 +359,7 @@ input[type=range].ration-slider{width:100%;accent-color:var(--moss);height:4px;b
 .week-bars{display:flex;align-items:flex-end;gap:6px;height:70px}
 .week-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
 .week-bar-track{width:100%;flex:1;background:var(--paper-2);border-radius:4px 4px 0 0;position:relative;overflow:hidden;cursor:pointer}
-.week-bar-fill{position:absolute;bottom:0;left:0;right:0;background:var(--moss-bright);border-radius:4px 4px 0 0;transition:height .8s cubic-bezier(.22,1,.36,1)}
+.week-bar-fill{width:100%;background:var(--line-2);border-radius:4px 4px 0 0;min-height:4px}
 .week-bar-fill.today{background:var(--moss)}
 .week-bar-label{font-size:10px;color:var(--muted);font-weight:500}
 
@@ -734,7 +734,7 @@ input[type=range].ration-slider{width:100%;accent-color:var(--moss);height:4px;b
       <input class="hist-search" id="histSearch" placeholder="Buscar plato…" oninput="renderHistory()">
     </div>
     <div class="stats-grid" id="statsGrid"></div>
-    <div class="week-chart" id="weekChart" style="display:none">
+    <div class="week-chart" id="weekChartWrap" style="display:none">
       <div class="week-chart-title">Calorías esta semana</div>
       <div class="week-bars" id="weekBars"></div>
     </div>
@@ -1203,26 +1203,21 @@ function saveHist(d){
 
 function renderHistory(){
   const list=document.getElementById('histList');const sg=document.getElementById('statsGrid');
-  const cb=document.getElementById('clearBtn');const sl=document.getElementById('histSectionLabel');
+  const sl=document.getElementById('histSectionLabel');const ha=document.getElementById('histActions');
+  const wc=document.getElementById('weekChartWrap');
   if(!hist.length){
-    sg.innerHTML='';sl.style.display='none';cb.style.display='none';
+    sg.innerHTML='';if(sl)sl.style.display='none';if(ha)ha.style.display='none';if(wc)wc.style.display='none';
     list.innerHTML=`<div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--moss)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><h3>Sin análisis</h3><p>Fotografía tu primer plato</p></div>`;
     return;
   }
-  // search
   const q=(document.getElementById('histSearch')?.value||'').toLowerCase();
   const filtered=q?hist.filter(h=>(h.nombre||'').toLowerCase().includes(q)):hist;
   const avgCal=Math.round(hist.reduce((s,h)=>s+(h.calorias||0),0)/hist.length);
   const avgScore=(hist.reduce((s,h)=>s+(h.puntuacion||0),0)/hist.length).toFixed(1);
   const avgProt=Math.round(hist.reduce((s,h)=>s+(h.macros?.proteinas||0),0)/hist.length);
-  sg.innerHTML=`
-    <div class="stat-card"><div class="stat-num">${hist.length}</div><div class="stat-label">Análisis</div></div>
-    <div class="stat-card"><div class="stat-num">${avgCal}</div><div class="stat-label">Media kcal</div></div>
-    <div class="stat-card"><div class="stat-num">${avgScore}</div><div class="stat-label">Puntuación</div></div>
-    <div class="stat-card"><div class="stat-num">${avgProt}<span style="font-size:18px;color:var(--muted)">g</span></div><div class="stat-label">Media prot.</div></div>`;
-  // weekly chart
+  sg.innerHTML=`<div class="stat-card"><div class="stat-num">${hist.length}</div><div class="stat-label">Análisis</div></div><div class="stat-card"><div class="stat-num">${avgCal}</div><div class="stat-label">Media kcal</div></div><div class="stat-card"><div class="stat-num">${avgScore}</div><div class="stat-label">Puntuación</div></div><div class="stat-card"><div class="stat-num">${avgProt}g</div><div class="stat-label">Media prot.</div></div>`;
   renderWeekChart();
-  sl.style.display='block';cb.style.display='block';
+  if(sl)sl.style.display='block';if(ha)ha.style.display='flex';
   list.innerHTML=filtered.map(h=>{
     const cls=h.puntuacion>=7?'exc':h.puntuacion>=4?'good':'poor';
     const thumb=h.img?`<img class="history-thumb" src="${h.img}" onerror="this.style.display='none'">`:`<div class="history-thumb-empty">🍽️</div>`;
@@ -1231,22 +1226,17 @@ function renderHistory(){
 }
 
 function renderWeekChart(){
-  const canvas=document.getElementById('weekChart');if(!canvas)return;
-  const ctx=canvas.getContext('2d');const W=canvas.offsetWidth||320;const H=120;
-  canvas.width=W*window.devicePixelRatio;canvas.height=H*window.devicePixelRatio;ctx.scale(window.devicePixelRatio,window.devicePixelRatio);
-  // build last 7 days
+  const wrap=document.getElementById('weekChartWrap');const bars=document.getElementById('weekBars');
+  if(!wrap||!bars)return;
   const days={};for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days[d.toDateString()]=0;}
-  hist.forEach(h=>{if(h.date){const found=Object.keys(days).find(k=>h.date.includes(new Date(k).getDate()));if(found)days[found]+=(h.calorias||0);}});
-  const vals=Object.values(days);const max=Math.max(...vals,1);const labels=['L','M','X','J','V','S','D'];const today=new Date().getDay();const dayNames=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));return['D','L','M','X','J','V','S'][d.getDay()];});
-  const barW=(W-48)/7;const isDark=document.getElementById('app').classList.contains('dark');
-  ctx.fillStyle=isDark?'#232118':'#f4f1e7';ctx.fillRect(0,0,W,H);
-  vals.forEach((v,i)=>{
-    const bH=Math.max(4,(v/max)*(H-40));const x=24+i*barW+barW*.15;const y=H-20-bH;const isToday=i===6;
-    ctx.fillStyle=isToday?'#3d8c4a':(isDark?'#2a2820':'#e2dfd5');
-    ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,barW*.7,bH,4);else ctx.rect(x,y,barW*.7,bH);ctx.fill();
-    if(v>0){ctx.fillStyle=isToday?'#1f5d2c':(isDark?'#7a7670':'#8a857a');ctx.font=`500 ${10*window.devicePixelRatio/window.devicePixelRatio}px Inter Tight, sans-serif`;ctx.textAlign='center';ctx.fillText(v>999?Math.round(v/100)/10+'k':v,x+barW*.35,y-4);}
-    ctx.fillStyle=isDark?'#7a7670':'#8a857a';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText(dayNames[i],x+barW*.35,H-6);
-  });
+  hist.forEach(h=>{const k=new Date(h.id).toDateString();if(k in days)days[k]+=(h.calorias||0);});
+  const vals=Object.values(days);const max=Math.max(...vals,1);
+  const names=Object.keys(days).map(k=>['D','L','M','X','J','V','S'][new Date(k).getDay()]);
+  bars.innerHTML=names.map((n,i)=>{
+    const v=vals[i];const h=Math.round((v/max)*64);const today=i===6;
+    return`<div class="week-bar-col"><div class="week-bar-val">${v>0?(v>999?Math.round(v/100)/10+'k':v):''}</div><div class="week-bar-fill${today?' today':''}" style="height:${h}px"></div><div class="week-bar-day">${n}</div></div>`;
+  }).join('');
+  wrap.style.display='block';
 }
 
 function clearHistory(){if(!hist.length){toast('Nada que borrar');return;}if(!confirm('¿Borrar todo el historial?'))return;hist=[];forget('fl_hist');renderHistory();updateUI();toast('Historial borrado');}
