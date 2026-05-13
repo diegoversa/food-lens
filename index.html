@@ -842,6 +842,10 @@
     <button class="capture-btn primary" onclick="openCamera()">📸 Hacer foto</button>
     <button class="capture-btn" onclick="openGallery()">🖼️ Subir de galería</button>
   </div>
+  <div class="capture-actions">
+    <button class="capture-btn primary" onclick="openCamera()">📸 Hacer foto</button>
+    <button class="capture-btn" onclick="openGallery()">🖼️ Subir de galería</button>
+  </div>
 
   <div class="photo-actions">
     <button class="photo-btn cam" onclick="openCamera()">
@@ -1024,6 +1028,13 @@
         <div class="row-text"><div class="row-title">Modo oscuro</div><div class="row-sub" id="darkModeStatus">Desactivado</div></div>
       </div>
     </div>
+    <div class="settings-group">
+      <div class="settings-group-label">Apariencia</div>
+      <div class="settings-row" onclick="toggleDarkMode()">
+        <div class="row-icon blue"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg></div>
+        <div class="row-text"><div class="row-title">Modo oscuro</div><div class="row-sub" id="darkModeStatus">Desactivado</div></div>
+      </div>
+    </div>
   </div>
   <nav class="bottom-nav">
     <button class="nav-item" onclick="goMain()">
@@ -1058,6 +1069,10 @@ if(apiKey) showKeyOk();
 updateUI();
 document.body.classList.toggle('dark',darkMode);
 document.getElementById('portionSlider').addEventListener('input',()=>{if(lastResult)renderResult(lastResult);});
+const navHistBtn=document.getElementById('navHist');
+if(navHistBtn){
+  navHistBtn.addEventListener('click',e=>{e.preventDefault();goHistory();});
+}
 setTimeout(()=>showScreen(apiKey?'main':'setup'),1800);
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
@@ -1075,7 +1090,15 @@ if('serviceWorker' in navigator){
 
 // ── Screen routing ──
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
-function goHistory(){renderHistory();showScreen('history')}
+function goHistory(){
+  try{
+    renderHistory();
+    showScreen('history');
+  }catch(err){
+    console.error('Error al abrir historial:',err);
+    toast('No se pudo abrir el historial');
+  }
+}
 function goSettings(){updateUI();showScreen('settings')}
 
 // ── Sheet ──
