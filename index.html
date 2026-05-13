@@ -704,7 +704,6 @@
     .sheet-item-text h4{font-size:14px;font-weight:600;color:var(--text)}
     .sheet-item-text p{font-size:12px;color:var(--muted);margin-top:1px;font-weight:300}
     .sheet-cancel{margin:4px 16px 0;padding:14px;background:var(--surface2);border:none;border-radius:var(--r-sm);width:calc(100% - 32px);font-size:14px;font-weight:600;font-family:'Sora',sans-serif;color:var(--text);cursor:pointer}
-    .capture-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 20px 0}
     .capture-btn{border:1px solid var(--border);background:var(--surface);border-radius:12px;padding:11px 10px;font-size:13px;font-weight:600;cursor:pointer}
     .capture-btn.primary{background:var(--text);color:#fff;border-color:var(--text)}
 
@@ -846,7 +845,7 @@
     <button class="capture-btn primary" onclick="openCamera()">📸 Hacer foto</button>
     <button class="capture-btn" onclick="openGallery()">🖼️ Subir de galería</button>
   </div>
-
+  <!-- Botones de foto -->
   <div class="photo-actions">
     <button class="photo-btn cam" onclick="openCamera()">
       <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -1035,6 +1034,13 @@
         <div class="row-text"><div class="row-title">Modo oscuro</div><div class="row-sub" id="darkModeStatus">Desactivado</div></div>
       </div>
     </div>
+    <div class="settings-group">
+      <div class="settings-group-label">Apariencia</div>
+      <div class="settings-row" onclick="toggleDarkMode()">
+        <div class="row-icon blue"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg></div>
+        <div class="row-text"><div class="row-title">Modo oscuro</div><div class="row-sub" id="darkModeStatus">Desactivado</div></div>
+      </div>
+    </div>
   </div>
   <nav class="bottom-nav">
     <button class="nav-item" onclick="goMain()">
@@ -1135,16 +1141,9 @@ function saveKey(){
   if(!v.startsWith('AIza')){toast('La key debe empezar por AIza…');return;}
   apiKey=v; localStorage.setItem('fl_key',v); showKeyOk(); toast('✓ API key guardada');
 }
-function showKeyOk(){
-  const inputRow=document.getElementById('setupInput').parentElement;
-  if(inputRow)inputRow.style.display='none';
-  document.getElementById('keyOk').style.display='flex';
-}
-function changeKey(){
-  document.getElementById('setupInput').parentElement.style.display='flex';
-  document.getElementById('keyOk').style.display='none';
-  document.getElementById('setupInput').value='';
-}
+function showKeyOk(){document.getElementById('setupInput').parentElement.style.display='none';document.getElementById('keyOk').style.display='flex';}
+function changeKey(){document.getElementById('setupInput').parentElement.style.display='flex';document.getElementById('keyOk').style.display='none';document.getElementById('setupInput').value='';}
+function goMain(){showScreen('main');}
 function editKey(){const v=prompt('Nueva API key (AIza…):');if(!v)return;if(!v.startsWith('AIza')){toast('Debe empezar por AIza…');return;}apiKey=v;localStorage.setItem('fl_key',v);updateUI();toast('✓ API key actualizada');}
 
 // ── Analyze ──
@@ -1505,7 +1504,7 @@ function renderHistory(){
   sl.style.display='block';cb.style.display='block';
   list.innerHTML=rows.map(h=>{
     const cls=h.puntuacion>=7?'exc':h.puntuacion>=4?'good':'poor';
-    const thumb=h.img?`<img class="history-thumb" src="${h.img}" onerror="this.style.display='none'">`:`<div class="history-thumb-empty">🍽️</div>`;
+    const thumb=h.img?`<img class="history-thumb" src="${h.img}" onerror="this.style.display='none'">`:`<div class="history-thumb-empty">IMG</div>`;
     return `<div class="history-card">${thumb}<div class="history-info"><div class="history-name">${h.nombre}</div><div class="history-meta">${h.date}</div></div><div class="history-right"><div class="history-cals">${h.calorias} kcal</div><div class="history-score ${cls}">${h.puntuacion}</div></div></div>`;
   }).join('');
 }
